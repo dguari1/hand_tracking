@@ -1,0 +1,16 @@
+{
+  "files": {
+    "main.css": "/hand_tracking/static/css/main.073c9b0a.css",
+    "main.js": "/hand_tracking/static/js/main.75b66236.js",
+    "static/js/787.8806f9f8.chunk.js": "/hand_tracking/static/js/787.8806f9f8.chunk.js",
+    "static/media/logo.svg": "/hand_tracking/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "index.html": "/hand_tracking/index.html",
+    "main.073c9b0a.css.map": "/hand_tracking/static/css/main.073c9b0a.css.map",
+    "main.75b66236.js.map": "/hand_tracking/static/js/main.75b66236.js.map",
+    "787.8806f9f8.chunk.js.map": "/hand_tracking/static/js/787.8806f9f8.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.073c9b0a.css",
+    "static/js/main.75b66236.js"
+  ]
+}
