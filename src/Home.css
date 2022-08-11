@@ -1,0 +1,56 @@
+
+*, *:after, *:before { -webkit-box-sizing: border-box; box-sizing: border-box; }
+
+html {
+  height: 100%;
+}
+
+body {
+  height: 100%;
+  background: white;
+  font-family: 'Raleway', Arial, sans-serif;
+}
+
+#app {
+  height: 100%;
+}
+
+main {
+  color: #3a363b;
+  height: 100%;
+  padding: 3em 1em;
+  text-align: center;
+  background: #eceff7;
+  overflow: auto;
+}
+
+h1 {
+  font-weight: 800;
+  font-size: 3.75em;
+}
+
+
+
+.description {
+  max-width: 25em;
+  margin: 1.2em auto 1em;
+  line-height: 1.3em;
+  font-weight: 400;
+}
+
+.home-container{
+  padding: 0;
+  margin: 5px;
+  padding: 5px;
+  background: #bdbec0a1;
+  font-size: 1.5em;
+  width : 80%;
+  height : 80%;
+  border-radius: 10px;
+  border: 1px solid #bdbec0;
+  position: relative;
+  left : 12.5%;
+}
+
+
+

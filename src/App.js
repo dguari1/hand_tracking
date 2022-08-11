@@ -1,55 +1,66 @@
 import logo from './logo.svg';
 import './App.css';
+import { useState } from "react";
 
+import { slide as Menu } from 'react-burger-menu'
+import {TbCamera, TbHandClick, TbHome2, TbQuestionMark} from 'react-icons/tb';
+import "./style_menu.css";
 
-import {Navigation} from 'react-minimal-side-navigation';
-import 'react-minimal-side-navigation/lib/ReactMinimalSideNavigation.css';
-
+import {Home} from "./Home";
+import WebCamRecord from "./WebCamRecord";
 
 function App() {
-  return (
-    <>
-    <Navigation
-        // you can use your own router's api to get pathname
-        activeItemId="/management/members"
-        onSelect={({itemId}) => {
-          // maybe push to the route
-        }}
-        items={[
-          {
-            title: 'Dashboard',
-            itemId: '/dashboard',
-            // you can use your own custom Icon component as well
-            // icon is optional
-            elemBefore: () => <Icon name="inbox" />,
-          },
-          {
-            title: 'Management',
-            itemId: '/management',
-            elemBefore: () => <Icon name="users" />,
-            subNav: [
-              {
-                title: 'Projects',
-                itemId: '/management/projects',
-              },
-              {
-                title: 'Members',
-                itemId: '/management/members',
-              },
-            ],
-          },
-          {
-            title: 'Another Item',
-            itemId: '/another',
-            subNav: [
-              {
-                title: 'Teams',
-                itemId: '/management/teams',
-              },
-            ],
-          },
-        ]}
-      />
+
+  const [showHome, setShowHome] = useState(true);
+  const [showRecord, setShowRecord] = useState(false);
+  const [showHandTracking, setShowHandTracking] = useState(true);
+  const [showAbout, setShowAbout] = useState(true);
+
+  function handleClick(event) {
+    console.log(event.target.id)
+    switch (event.target.id) {
+      case 'home':
+        setShowHome(true);
+        setShowRecord(false);
+        setShowHandTracking(false);
+        setShowAbout(false);
+        break;
+      case 'record':
+        setShowHome(false);
+        setShowRecord(true);
+        setShowHandTracking(false);
+        setShowAbout(false);
+        break;
+      case 'handTracking':
+        setShowHome(false);
+        setShowRecord(false);
+        setShowHandTracking(true);
+        setShowAbout(false);
+        break;
+      case 'about':
+        setShowHome(false);
+        setShowRecord(false);
+        setShowHandTracking(false);
+        setShowAbout(true);
+        break;
+      default:
+        break;
+    }
+  }
+
+  return (<>
+
+<Menu width={300}
+      disableCloseOnEsc>
+
+        <a id="home" className="menu-item" onClick={handleClick}>Home</a>
+        <a id="record" className="menu-item" onClick={handleClick}>Record</a>
+        <a id="handtracking" className="menu-item" href="/contact">Hand Tracking</a>
+        <a id="about" className="menu-item--small" href="">About</a>
+  </Menu>
+
+  { showHome ? <Home /> : null }
+  { showRecord ? <WebCamRecord /> : null }
   </>
 );
 }
