@@ -1,6 +1,6 @@
 import logo from './logo.svg';
 import './App.css';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 import { slide as Menu } from 'react-burger-menu'
 import {TbCamera, TbHandClick, TbHome2, TbQuestionMark} from 'react-icons/tb';
@@ -11,10 +11,25 @@ import WebCamRecord from "./WebCamRecord";
 
 function App() {
 
+
+
   const [showHome, setShowHome] = useState(true);
   const [showRecord, setShowRecord] = useState(false);
   const [showHandTracking, setShowHandTracking] = useState(true);
   const [showAbout, setShowAbout] = useState(true);
+
+
+  useEffect(() => {
+    setShowHome(true);
+    setShowRecord(false);
+    setShowHandTracking(false);
+    setShowAbout(false);
+
+    var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+    var isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
+    console.log(isChrome, isSafari);
+  } , []);
+
 
   function handleClick(event) {
     console.log(event.target.id)

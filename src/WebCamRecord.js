@@ -31,7 +31,6 @@ class WebCamRecord extends Component {
         this.tick = this.tick.bind(this); // binding this to tick. 
         this.handleClick = this.handleClick.bind(this); // binding this to handleClick. 
         this.loadedData = this.loadedData.bind(this); // binding this to loadedData
-        this.startRecording = this.startRecording.bind(this); // binding this to startRecording
         this.stopRecording = this.stopRecording.bind(this); // binding this to stopRecording
         this.handleDataAvailable = this.handleDataAvailable.bind(this); // binding this to handleDataAvailable
         this.saveRecording = this.saveRecording.bind(this); // binding this to saveRecording
@@ -52,6 +51,8 @@ class WebCamRecord extends Component {
         this.startTime = null; // variable that holds the start time of the recording
         this.duration = null; // variable that holds the end time of the recording
         this.maxDurationTask = 0 // variable that holds the max duration of the task
+
+        this.isSafari = false; // variable that holds the status of the current device
     }
 
     componentDidMount() {
@@ -65,6 +66,7 @@ class WebCamRecord extends Component {
         //     this.currentAudioStream = new MediaStream(stream.getAudioTracks())
         //     this.currentVideoStream = new MediaStream(stream.getVideoTracks())
         // } ).catch(err => console.log('error with stream', err))
+        this.isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
         this.updateDevicesList();
         this.createMediaStream();
 
@@ -273,10 +275,14 @@ class WebCamRecord extends Component {
 
 
     // function that starts the recording
-    startRecording () {
+    startRecording = () => {
 
         try {
-            this.mediaRecorder = new MediaRecorder(this.currentStream, {mimeType: "video/webm; codecs:vp09, opus"});
+            if (this.isSafari) {
+                this.mediaRecorder = new MediaRecorder(this.currentStream, {mimeType: "video/mp4; codecs:avc1, mp4a"});
+            } else {
+                this.mediaRecorder = new MediaRecorder(this.currentStream, {mimeType: "video/webm; codecs:vp09, opus"});
+            }
             console.log(this.mediaRecorder.mimeType)
             
           } catch (e) {
@@ -320,7 +326,13 @@ class WebCamRecord extends Component {
 
     saveRecording () {
         console.log('Saving', this.mediaChunks)
-        const blob = new Blob(this.mediaChunks, {type: "video/webm; codecs:vp09, opus"}); 
+        var blob = null
+        if (this.isSafari) {
+            blob = new Blob(this.mediaChunks, {type: "video/mp4; codecs:avc1, mp4a"}); 
+        } else {
+            blob = new Blob(this.mediaChunks, {type: "video/webm; codecs:vp09, opus"}); 
+        }
+        this.mediaChunks = [];
         fixWebmDuration(blob, this.duration, (fixedBlob) => {  // fix the duration of the video
             // send data to the parent component
             console.log('fixedBlob', fixedBlob)
@@ -328,7 +340,11 @@ class WebCamRecord extends Component {
             const a = document.createElement('a');
             a.style.display = 'none';
             a.href = url;
-            a.download = 'test.webm';
+            if (this.isSafari) {
+                a.download = 'recording.mp4';
+            } else {
+                a.download = 'recording.webm';
+            }
             document.body.appendChild(a);
             a.click();
             setTimeout(() => {
