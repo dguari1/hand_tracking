@@ -1,0 +1,190 @@
+.container{
+    width : 100%;
+    margin-top : 30px;
+    align-content: center;
+    text-align: center;
+}
+
+.container video-container {
+    /* width: auto;
+    height : auto; 
+    background: white;
+    display: flex;
+    justify-content: center;
+    margin: 0;
+    margin-right:auto;
+    margin-left:auto; */
+    width: 100%;
+    margin: 0 auto;
+    position: relative;
+    }
+
+.container figure {
+        box-shadow: 0 2.8px 2.2px rgba(0, 0, 0, 0.034),
+          0 6.7px 5.3px rgba(0, 0, 0, 0.048), 0 12.5px 10px rgba(0, 0, 0, 0.06),
+          0 22.3px 17.9px rgba(0, 0, 0, 0.072), 0 41.8px 33.4px rgba(0, 0, 0, 0.086),
+          0 100px 80px rgba(0, 0, 0, 0.12);
+        width: 100%; 
+        position: relative;
+      }    
+
+.container figure video{
+    width: 100%;
+    height: 100%;
+    display: block;
+    position: relative;
+    z-index: 0;
+}
+
+.container figure canvas{
+    height: 100%;
+    width: 100%;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index:1;
+    background-color:rgba(0, 0, 255, 0.05)
+}
+
+#buttonFigure {
+    position: absolute;
+    z-index: 100;
+    background-color: red;
+    border: none;
+    border-radius: 0px;
+    padding: 0px;
+    width: 1em;
+    font-weight: bold;
+    visibility: hidden;
+    align-items: center;
+    text-align: center;
+  }
+
+.zoom-selector{
+    width: 100%;
+    height : auto; 
+    background: white;
+    display: flex;
+    justify-content: center;
+    margin: 10px 0px 10px 0px;
+    min-width: 500px;
+    }
+
+.container button {
+    background-color: #364753; /* Green background */
+    border: 3px solid white; /* Green border */
+    color: white; /* White text */
+    padding: 10px 10px; /* Some padding */
+    cursor: auto; /* Pointer/hand icon */
+    grid-row-gap: 20px;
+    grid-column-gap: 20px;    
+    border-color : white;
+    font-family:Verdana, Geneva, sans-serif;
+    font-size: 24px;
+    outline: none;
+    border-radius: 8px;
+    min-width: 50px;
+    max-width: 200px;
+    }
+.container button:hover {
+    background-color: #364753eb; 
+    border: 1px solid white;
+    color: white;
+    padding: 10px 10px; /* Some padding */
+    cursor: auto; /* Pointer/hand icon */
+    grid-row-gap: 10px;
+    grid-column-gap: 10px;
+    cursor: pointer;
+    opacity: 0.5;
+}
+
+.container button:active {
+    transform: scale(0.98);
+    /* Scaling button to 0.98 to its original size */
+    box-shadow: 3px 2px 22px 1px rgba(0, 0, 0, 0.24);
+    /* Lowering the shadow */
+}
+
+.container button:disabled{
+    /* background: #f79fbf; */
+    background: #bdbec0a1;
+    cursor: default;
+    transition: none;
+    pointer-events: none;
+    opacity: 0.2;
+    }
+    
+.container label {
+    order: 2;
+    text-align: center;
+    }
+    
+.container .controls {
+    text-align: center;
+    padding: 0.5em 0;
+    background: #364753;
+    }
+
+/* The switch - the box around the slider */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 60px;
+    height: 34px;
+    margin-top: 10px;
+  }
+  
+  /* Hide default HTML checkbox */
+  .switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+  
+  /* The slider */
+  .slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #3B4943;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  .slider:before {
+    position: absolute;
+    content: "";
+    height: 26px;
+    width: 26px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    -webkit-transition: .4s;
+    transition: .4s;
+  }
+  
+  input:checked + .slider {
+    background-color: #3B4943;
+  }
+  
+  input:focus + .slider {
+    box-shadow: 0 0 1px #3B4943;
+  }
+  
+  input:checked + .slider:before {
+    -webkit-transform: translateX(26px);
+    -ms-transform: translateX(26px);
+    transform: translateX(26px);
+  }
+  
+  /* Rounded sliders */
+  .slider.round {
+    border-radius: 34px;
+  }
+  
+  .slider.round:before {
+    border-radius: 50%;
+  }

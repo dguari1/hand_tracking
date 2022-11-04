@@ -366,8 +366,9 @@ class WebCamRecord extends Component {
             <label>Video Devices: </label>
             <select id="video-devices" className="custom-select" ref = {this.videoDevicesRef} onChange={this.handleDeviceChange}></select>
             </div>
-
+            
              <figure className="figure">
+             <div style={{position:"relative"}}> 
                   <video 
                     ref = {this.videoTag}
                     autoPlay
@@ -389,13 +390,14 @@ class WebCamRecord extends Component {
                         zIndex : 2 // this canvas is in layer 2
                     }}
                 />     
+                <button id='buttonFigure' type="button" value='record' ref={this.recordButtonTag} onClick={this.handleClick} >Record</button>
+                </div>
                 <figcaption>
                     <p> </p>
 
                 <progress ref = {this.progressTag} max="100" value="0">Progress</progress>
                 </figcaption>
                 </figure>
-                <button type="button" value='record' ref={this.recordButtonTag} onClick={this.handleClick} >Record</button><br></br>
                 <button type="button" value='save' ref={this.saveButtonTag}  onClick={this.handleClick} disabled={this.state.buttonDisabled}>Save</button>
 
                 

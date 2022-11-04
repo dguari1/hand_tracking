@@ -36,8 +36,17 @@
     background: #c7c6c6;
     display: grid;
     grid-gap: 1rem;
-    grid-template-columns: 50px auto min(115px);
-    padding: 0.5rem;
+    grid-template-columns: 10px auto 10px; /*50px auto min(115px); */
+    padding: 0.5rem; 
+  }
+
+  #buttonFigure {
+    position: absolute;
+    width: 25%;
+    min-height: 5%;
+    left: 37.5%;
+    top: 90%;
+    z-index: 100;
   }
   
   .vslp-webcam button {
@@ -81,10 +90,10 @@
     box-shadow: 0 2px 3px rgba(0, 0, 0, 0.25) inset;
     color: dodgerblue;
     display: inline;
-    height: 15px;
+    /*height: 15px;*/
     order: 1;
     position: relative;
-    width: 110%;
+    width: 100%;
   }
   
   /* WebKit styles */
@@ -115,4 +124,17 @@
     text-align: center;
     padding: 0.5em 0;
     /* background: #333e5a; */
+  }
+
+  .loader {
+    border: 16px solid #f3f3f3; /* Light grey */
+    border-top: 16px solid #3498db; /* Blue */
+    border-radius: 50%;
+    width: 120px;
+    height: 120px;
+    animation: spin 2s linear infinite;
+  }
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }

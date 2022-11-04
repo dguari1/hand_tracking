@@ -8,6 +8,8 @@ import "./style_menu.css";
 
 import {Home} from "./Home";
 import WebCamRecord from "./WebCamRecord";
+import VideoLoadScreen from './VideoLoadScreen';
+//import WebCamAnalysis from "./WebCamAnalysis";
 
 function App() {
 
@@ -15,20 +17,18 @@ function App() {
 
   const [showHome, setShowHome] = useState(true);
   const [showRecord, setShowRecord] = useState(false);
-  const [showHandTracking, setShowHandTracking] = useState(true);
-  const [showAbout, setShowAbout] = useState(true);
+  const [showVideoAnalysis, setShowVideoAnalysis] = useState(false);
+  const [showAbout, setShowAbout] = useState(false);
 
+  const [isOpen, setOpen] = useState(false)
 
-  useEffect(() => {
-    setShowHome(true);
-    setShowRecord(false);
-    setShowHandTracking(false);
-    setShowAbout(false);
+  const handleIsOpen = () => {
+    setOpen(!isOpen)
+  }
 
-    var isChrome = /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
-    var isSafari = /Safari/.test(navigator.userAgent) && /Apple Computer/.test(navigator.vendor);
-    console.log(isChrome, isSafari);
-  } , []);
+  const closeSideBar = () => {
+    setOpen(false)
+  }
 
 
   function handleClick(event) {
@@ -37,26 +37,30 @@ function App() {
       case 'home':
         setShowHome(true);
         setShowRecord(false);
-        setShowHandTracking(false);
+        setShowVideoAnalysis(false);
         setShowAbout(false);
+        closeSideBar()
         break;
       case 'record':
         setShowHome(false);
         setShowRecord(true);
-        setShowHandTracking(false);
+        setShowVideoAnalysis(false);
         setShowAbout(false);
+        closeSideBar()
         break;
-      case 'handTracking':
+      case 'videoanalysis':
         setShowHome(false);
         setShowRecord(false);
-        setShowHandTracking(true);
+        setShowVideoAnalysis(true);
         setShowAbout(false);
+        closeSideBar()
         break;
       case 'about':
         setShowHome(false);
         setShowRecord(false);
-        setShowHandTracking(false);
+        setShowVideoAnalysis(false);
         setShowAbout(true);
+        closeSideBar()
         break;
       default:
         break;
@@ -66,16 +70,21 @@ function App() {
   return (<>
 
 <Menu width={300}
-      disableCloseOnEsc>
+      disableCloseOnEsc
+      isOpen={isOpen}
+      onOpen={handleIsOpen}
+      onClose={handleIsOpen}>
 
         <a id="home" className="menu-item" onClick={handleClick}>Home</a>
         <a id="record" className="menu-item" onClick={handleClick}>Record</a>
-        <a id="handtracking" className="menu-item" href="/contact">Hand Tracking</a>
-        <a id="about" className="menu-item--small" href="">About</a>
+        <a id="videoanalysis" className="menu-item" onClick={handleClick}>Video Analysis</a>
+        <a id="about" className="menu-item--small" onClick={handleClick}>About</a>
   </Menu>
 
   { showHome ? <Home /> : null }
   { showRecord ? <WebCamRecord /> : null }
+  { showVideoAnalysis ? <VideoLoadScreen /> : null }
+
   </>
 );
 }
