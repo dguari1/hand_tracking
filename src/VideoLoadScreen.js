@@ -58,6 +58,8 @@ class VideoLoadScreen extends Component {
         // management of regions
         this.regions = [];
         this.currentRegion = 0;
+        this.processVideos = false
+        this.coordsVideo = [];
 
         // finding the frame rate
         this.previousTime = -1; 
@@ -118,8 +120,14 @@ class VideoLoadScreen extends Component {
           this.ctx.strokeStyle = "red";
           this.ctx.lineWidth = 2;
 
-          
+          // create a way to remove regions by double click 
+          this.waveSurferRef.current.on('region-dblclick', this.handleRegionDoubleClick)          
 
+    }
+
+    handleRegionDoubleClick = (region) => {
+        //remove the region when double click on it :->
+        region.remove()
     }
 
     componentWillUnmount = () => {
@@ -353,11 +361,14 @@ class VideoLoadScreen extends Component {
                 var x2 = parseInt((this.state.rectangle.x2 / this.canvasRef.current.width) * this.videoRef.current.videoWidth);
                 var y2 = parseInt((this.state.rectangle.y2 / this.canvasRef.current.height) * this.videoRef.current.videoHeight);
             } else {
-                var x1 = 0;
-                var y1 = 0;
-                var x2 = this.videoRef.current.videoWidth;
-                var y2 = this.videoRef.current.videoHeight;
+                var x1 = parseInt(0);
+                var y1 = parseInt(0);
+                var x2 = parseInt(this.videoRef.current.videoWidth);
+                var y2 = parseInt(this.videoRef.current.videoHeight);
             }
+
+            this.coordsVideo = [x1,x2,y1,y2]
+            console.log(this.coordsVideo)
 
 
 
@@ -378,56 +389,61 @@ class VideoLoadScreen extends Component {
 
             }
 
+            this.processVideos = true
+            this.currentRegion = 0 
+            // put video at the begining of current region, triggering the handleSeeked function
+            this.videoRef.current.currentTime = this.regions[this.currentRegion].start
 
-            var video = this.videoRef.current
-            var width = video.videoWidth
-            var height = video.videoHeight
-            var processCurrentFrame = true
+
+            // var video = this.videoRef.current
+            // var width = video.videoWidth
+            // var height = video.videoHeight
+            // var processCurrentFrame = true
             
 
-            // this.regions.forEach(item => {
-            var ctxB = this.getFrameImageData(video, this.canvasRefB.current)
-            console.log('current', video.currentTime)
-            for (var i = 0; i < this.regions.length; i++) {
-                var desiredVideoTime = this.regions[i].start
-                video.currentTime = desiredVideoTime;   
-                while (video.currentTime <= this.regions[i].end)
-                {   
-                    var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
-                    console.log('A', video.currentTime)
+            // // this.regions.forEach(item => {
+            // var ctxB = this.getFrameImageData(video, this.canvasRefB.current)
+            // console.log('current', video.currentTime)
+            // for (var i = 0; i < this.regions.length; i++) {
+            //     var desiredVideoTime = this.regions[i].start
+            //     video.currentTime = desiredVideoTime;   
+            //     while (video.currentTime < this.regions[i].end)
+            //     {   
+            //         var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
+            //         console.log('A', video.currentTime)
     
-                    if (processCurrentFrame) {
+            //         if (processCurrentFrame) {
                     
-                        //process current frame 
+            //             //process current frame 
 
-                        //increase the time 
-                        desiredVideoTime = desiredVideoTime + (1/this.estimatedFrameRate)
-                        //seek the next frame
-                        video.currentTime = desiredVideoTime
-                        console.log('B', video.currentTime)
-                        const diff = pixelmatch(ctxA.getImageData(0,0,width,height).data, ctxB.getImageData(0,0,width,height).data, null, width, height, {threshold: 0.1})
-                        console.log(diff)
-                        // if (ctxA == ctxB) {
-                        //     processCurrentFrame = false
-                        // } else {
-                        //     processCurrentFrame = true
-                        // }
+            //             //increase the time 
+            //             desiredVideoTime = desiredVideoTime + (1/this.estimatedFrameRate)
+            //             //seek the next frame
+            //             video.currentTime = desiredVideoTime
+            //             console.log('B', video.currentTime)
+            //             const diff = pixelmatch(ctxA.getImageData(0,0,width,height).data, ctxB.getImageData(0,0,width,height).data, null, width, height, {threshold: 0.1})
+            //             console.log(diff)
+            //             // if (ctxA == ctxB) {
+            //             //     processCurrentFrame = false
+            //             // } else {
+            //             //     processCurrentFrame = true
+            //             // }
 
-                    } else {
-                        //do not process the frame, just move to the next frame
-                        desiredVideoTime = desiredVideoTime + 1/this.estimatedFrameRate
-                        //seek the next frame
-                        video.currentTime = desiredVideoTime
-                        var ctxB = this.getFrameImageData(video, this.canvasRefB.current)
-                    //     if (ctxA == ctxB) {
-                    //         processCurrentFrame = false
-                    //     } else {
-                    //         processCurrentFrame = true
-                    //     }
-                    }
+            //         } else {
+            //             //do not process the frame, just move to the next frame
+            //             desiredVideoTime = desiredVideoTime + 1/this.estimatedFrameRate
+            //             //seek the next frame
+            //             video.currentTime = desiredVideoTime
+            //             var ctxB = this.getFrameImageData(video, this.canvasRefB.current)
+            //         //     if (ctxA == ctxB) {
+            //         //         processCurrentFrame = false
+            //         //     } else {
+            //         //         processCurrentFrame = true
+            //         //     }
+            //         }
 
-                }
-            }
+            //     }
+            // }
             //)
 
 
@@ -441,17 +457,46 @@ class VideoLoadScreen extends Component {
     }
 
     getFrameImageData = (video,canvas) =>{
-        canvas.height = video.videoHeight;
-        canvas.width = video.videoWidth;
+
+        var heightCanvas = this.coordsVideo[3] - this.coordsVideo[2];
+        var widthCanvas = this.coordsVideo[1] - this.coordsVideo[0]
+        canvas.height = heightCanvas ;
+        canvas.width = widthCanvas;
         var ctx = canvas.getContext('2d',{willReadFrequently:true});
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+        ctx.drawImage(video, this.coordsVideo[0], this.coordsVideo[2] ,heightCanvas, widthCanvas, 0, 0, heightCanvas, widthCanvas);
 
         return ctx
     }
 
-    handleSeeked = (event) => {
-        console.log('Video found the playback position it was looking for.');
+    // callback that will be activated every time a seeking event ends
+    handleSeeked = () => {
+
+        if (this.processVideos) {
+            var video = this.videoRef.current
+            var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
+
+
+
+
+            var desiredVideoTime = video.currentTime + (1/this.estimatedFrameRate)
+
+            if (desiredVideoTime < video.duration){
+
+                if (desiredVideoTime < this.regions[this.currentRegion].end){
+
+                    video.currentTime = desiredVideoTime
+                } else {
+
+                    if (this.currentRegion < this.regions.length - 1) {
+                        this.currentRegion++
+                        video.currentTime = this.regions[this.currentRegion].start
+                    }
+                }
+
+            }
+    }
+
     }
 
     handleLoadedData = () =>{
@@ -535,7 +580,7 @@ class VideoLoadScreen extends Component {
                         onPause = {this.handlePause}
                         onPlay = {this.handlePlay}
                         onSeeked = {this.handleSeeked}
-                        onTimeUpdate = {this.handleTimeUpdate}
+                        // onTimeUpdate = {this.handleTimeUpdate}
                 /> 
                 <canvas
                     ref={this.canvasRef}
