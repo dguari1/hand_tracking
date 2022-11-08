@@ -10,6 +10,9 @@ import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 import { TbRectangle } from "react-icons/tb";
 // import CustomWavesurfer from "./CustomWaveSurfer";
 
+
+import {Pose} from "@mediapipe/pose"
+
 const WaveSurfer = require("wavesurfer.js");
 const pixelmatch = require('pixelmatch');
 
@@ -66,6 +69,10 @@ class VideoLoadScreen extends Component {
         this.frameCounter = 0; 
         this.arrayFrameRate = [ ]; // array that holds the frame rate estimates
         this.estimatedFrameRate = 0; // variable that holds the estimated frame rate
+
+        //webworker
+        this.webWorker = null; // this variable will hold the webWorker
+        this.workerModelIsReady = false; // this variable will hold the status of the workerModelIsReady
     }
 
     componentDidMount = () => {
@@ -121,8 +128,43 @@ class VideoLoadScreen extends Component {
           this.ctx.lineWidth = 2;
 
           // create a way to remove regions by double click 
-          this.waveSurferRef.current.on('region-dblclick', this.handleRegionDoubleClick)          
+          this.waveSurferRef.current.on('region-dblclick', this.handleRegionDoubleClick)   
 
+          // mount the worker that will process the data 
+          console.log('mounting worker')
+          this.handleMountWorker()
+
+    }
+
+    componentWillUnmount(){
+        document.removeEventListener('resize', this.handleResize);
+        document.removeEventListener('keydown', this.handleKeyPress);
+        this.webWorker.terminate();
+
+      }
+
+
+    handleMountWorker = () => {
+
+        // here we declare a sharedWorker. The worker should have been initialized by the parent component. This will link this
+        // code to that worker and allow the code to use it. If the parent didn't initialize the SharedWorker, then it will be initialized here
+        this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url))
+        this.webWorker.onerror = function(event) {
+            console.log('There is an error with your worker!', event);
+          }
+        // create a connection (port) with the SharedWorker so that we can send work to it
+        // this.webWorker.port.start();
+        // ask the worker to load the model
+        
+        this.webWorker.postMessage({msg: 'init'})
+        console.log('starting the model')
+        
+    }
+
+    handleLoadedData = () =>{
+
+        this.videoRef.current.play();
+        this.videoRef.current.requestVideoFrameCallback(this.findFrameRate)
     }
 
     handleRegionDoubleClick = (region) => {
@@ -394,65 +436,6 @@ class VideoLoadScreen extends Component {
             // put video at the begining of current region, triggering the handleSeeked function
             this.videoRef.current.currentTime = this.regions[this.currentRegion].start
 
-
-            // var video = this.videoRef.current
-            // var width = video.videoWidth
-            // var height = video.videoHeight
-            // var processCurrentFrame = true
-            
-
-            // // this.regions.forEach(item => {
-            // var ctxB = this.getFrameImageData(video, this.canvasRefB.current)
-            // console.log('current', video.currentTime)
-            // for (var i = 0; i < this.regions.length; i++) {
-            //     var desiredVideoTime = this.regions[i].start
-            //     video.currentTime = desiredVideoTime;   
-            //     while (video.currentTime < this.regions[i].end)
-            //     {   
-            //         var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
-            //         console.log('A', video.currentTime)
-    
-            //         if (processCurrentFrame) {
-                    
-            //             //process current frame 
-
-            //             //increase the time 
-            //             desiredVideoTime = desiredVideoTime + (1/this.estimatedFrameRate)
-            //             //seek the next frame
-            //             video.currentTime = desiredVideoTime
-            //             console.log('B', video.currentTime)
-            //             const diff = pixelmatch(ctxA.getImageData(0,0,width,height).data, ctxB.getImageData(0,0,width,height).data, null, width, height, {threshold: 0.1})
-            //             console.log(diff)
-            //             // if (ctxA == ctxB) {
-            //             //     processCurrentFrame = false
-            //             // } else {
-            //             //     processCurrentFrame = true
-            //             // }
-
-            //         } else {
-            //             //do not process the frame, just move to the next frame
-            //             desiredVideoTime = desiredVideoTime + 1/this.estimatedFrameRate
-            //             //seek the next frame
-            //             video.currentTime = desiredVideoTime
-            //             var ctxB = this.getFrameImageData(video, this.canvasRefB.current)
-            //         //     if (ctxA == ctxB) {
-            //         //         processCurrentFrame = false
-            //         //     } else {
-            //         //         processCurrentFrame = true
-            //         //     }
-            //         }
-
-            //     }
-            // }
-            //)
-
-
-
-            // // play the video video only on the regions 
-            // var video = this.videoRef.current
-            // video.currentTime = this.regions[this.currentRegion].start;
-            // video.play()
-            // await video.requestVideoFrameCallback(this.loopFunction)
         }
     }
 
@@ -499,10 +482,7 @@ class VideoLoadScreen extends Component {
 
     }
 
-    handleLoadedData = () =>{
-        this.videoRef.current.play();
-        this.videoRef.current.requestVideoFrameCallback(this.findFrameRate)
-    }
+  
 
     findFrameRate = (now, metadata) => {
 
@@ -619,7 +599,7 @@ class VideoLoadScreen extends Component {
                                             margin: "auto", 
                                             marginTop: "10px", 
                                             marginBottom: "10px",
-                                            // transform: "translateY(-100%)",
+                                            transform: "translateY(-100%)",
                                             //top: "-50%",
                                         }}/>
                     <div id="wave-timeline" ref={this.timeLineRef} style = {{width: "75%",}}></div>
