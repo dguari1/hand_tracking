@@ -73,6 +73,8 @@ class VideoLoadScreen extends Component {
         //webworker
         this.webWorker = null; // this variable will hold the webWorker
         this.workerModelIsReady = false; // this variable will hold the status of the workerModelIsReady
+        this.poseModelReady = false;
+        this.handsModelReady = false;
     }
 
     componentDidMount = () => {
@@ -130,9 +132,11 @@ class VideoLoadScreen extends Component {
           // create a way to remove regions by double click 
           this.waveSurferRef.current.on('region-dblclick', this.handleRegionDoubleClick)   
 
-          // mount the worker that will process the data 
-          console.log('mounting worker')
-          this.handleMountWorker()
+          // mount the worker that will process the data +
+          if (this.webWorker === null) {
+            console.log('mounting worker')
+            this.handleMountWorker()
+          }
 
     }
 
@@ -148,7 +152,9 @@ class VideoLoadScreen extends Component {
 
         // here we declare a sharedWorker. The worker should have been initialized by the parent component. This will link this
         // code to that worker and allow the code to use it. If the parent didn't initialize the SharedWorker, then it will be initialized here
-        this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url))
+        // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url), { type: "module" })
+        // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url))
+        this.webWorker = new window.Worker(new URL("/workers/runningTensorFlowModel_worker.js", import.meta.url))
         this.webWorker.onerror = function(event) {
             console.log('There is an error with your worker!', event);
           }
@@ -157,7 +163,16 @@ class VideoLoadScreen extends Component {
         // ask the worker to load the model
         
         this.webWorker.postMessage({msg: 'init'})
-        console.log('starting the model')
+        
+        this.webWorker.onmessage = (event) => {
+ 
+            if ((event.data.poseModelReady) && (event.data.handsModelReady)){
+                this.poseModelReady = true;
+                this.handsModelReady = true;
+            }
+
+
+        }
         
     }
 
@@ -410,9 +425,6 @@ class VideoLoadScreen extends Component {
             }
 
             this.coordsVideo = [x1,x2,y1,y2]
-            console.log(this.coordsVideo)
-
-
 
             this.regions = []
             this.currentRegion = 0 
@@ -441,14 +453,14 @@ class VideoLoadScreen extends Component {
 
     getFrameImageData = (video,canvas) =>{
 
+        
         var heightCanvas = this.coordsVideo[3] - this.coordsVideo[2];
         var widthCanvas = this.coordsVideo[1] - this.coordsVideo[0]
         canvas.height = heightCanvas ;
         canvas.width = widthCanvas;
         var ctx = canvas.getContext('2d',{willReadFrequently:true});
         ctx.clearRect(0, 0, canvas.width, canvas.height);
-        ctx.drawImage(video, this.coordsVideo[0], this.coordsVideo[2] ,heightCanvas, widthCanvas, 0, 0, heightCanvas, widthCanvas);
-
+        ctx.drawImage(video, this.coordsVideo[0], this.coordsVideo[2] , widthCanvas, heightCanvas, 0, 0, widthCanvas , heightCanvas);
         return ctx
     }
 
@@ -456,9 +468,23 @@ class VideoLoadScreen extends Component {
     handleSeeked = () => {
 
         if (this.processVideos) {
+            //send data to the worker to be processed 
             var video = this.videoRef.current
             var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
+            const imageData = ctxA.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
+            //check if the models are ready 
 
+            if ((this.poseModelReady) && (this.handsModelReady)) {
+                this.webWorker.postMessage({
+                    "msg" : "frame",
+                    "data" : imageData.data.buffer,
+                    "width" : this.canvasRefA.current.width, 
+                    "height" : this.canvasRefA.current.height,
+                }, [imageData.data.buffer])
+            }
+
+
+            
 
 
 
@@ -627,14 +653,14 @@ class VideoLoadScreen extends Component {
 
                 <canvas
                     ref={this.canvasRefA}
-                    style= {{width : '20%'}}
-                    // style={{display : 'none'}}
+                    style={{width : '50%',
+                            backgroundColor : 'rgba(0, 0, 255, 0.1)'}}
                 />      
-                <canvas
+                {/* <canvas
                     ref={this.canvasRefB}
                     style= {{width : '20%'}}
                     // style={{display : 'none'}}
-                /> 
+                />  */}
             </div>
 
         );
