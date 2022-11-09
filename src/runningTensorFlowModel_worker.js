@@ -1,14 +1,15 @@
-// importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs")
+// importScripts("https://unpkg.com/regenerator-runtime@0.13.1/runtime.js")
+importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs")
 // importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-core")
-importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js");
+// importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs/dist/tf.min.js");
 // importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-converter")
 // importScripts("https://cdn.jsdelivr.net/npm/@tensorflow/tfjs-backend-webgl")
 
 //importScripts("https://cdn.jsdelivr.net/npm/@tensorflow-models/posenet")
 importScripts("https://cdn.jsdelivr.net/npm/@tensorflow-models/hand-pose-detection")
 
-importScripts("https://cdn.jsdelivr.net/npm/@mediapipe/hands")
-importScripts("https://cdn.jsdelivr.net/npm/@mediapipe/pose")
+//importScripts("https://cdn.jsdelivr.net/npm/@mediapipe/hands")
+//importScripts("https://cdn.jsdelivr.net/npm/@mediapipe/pose")
 
 importScripts("https://cdn.jsdelivr.net/npm/@tensorflow-models/pose-detection")
 

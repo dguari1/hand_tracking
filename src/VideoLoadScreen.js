@@ -140,21 +140,13 @@ class VideoLoadScreen extends Component {
 
     }
 
-    componentWillUnmount(){
-        document.removeEventListener('resize', this.handleResize);
-        document.removeEventListener('keydown', this.handleKeyPress);
-        this.webWorker.terminate();
-
-      }
-
-
     handleMountWorker = () => {
 
         // here we declare a sharedWorker. The worker should have been initialized by the parent component. This will link this
         // code to that worker and allow the code to use it. If the parent didn't initialize the SharedWorker, then it will be initialized here
         // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url), { type: "module" })
         // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url))
-        this.webWorker = new window.Worker(new URL("/workers/runningTensorFlowModel_worker.js", import.meta.url))
+        this.webWorker = new window.Worker(new URL("runningTensorFlowModel_worker.js", import.meta.url))
         this.webWorker.onerror = function(event) {
             console.log('There is an error with your worker!', event);
           }
@@ -192,6 +184,7 @@ class VideoLoadScreen extends Component {
             event.preventDefault();
             document.removeEventListener('keydown', this.handleKeyPress);
             window.removeEventListener('resize', this.handleResize);
+            this.webWorker.terminate();
             console.log('unmounting')
        })
     }
@@ -625,7 +618,7 @@ class VideoLoadScreen extends Component {
                                             margin: "auto", 
                                             marginTop: "10px", 
                                             marginBottom: "10px",
-                                            transform: "translateY(-100%)",
+                                            // transform: "translateY(-100%)",
                                             //top: "-50%",
                                         }}/>
                     <div id="wave-timeline" ref={this.timeLineRef} style = {{width: "75%",}}></div>
