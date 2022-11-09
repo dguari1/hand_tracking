@@ -146,7 +146,7 @@ class VideoLoadScreen extends Component {
         // code to that worker and allow the code to use it. If the parent didn't initialize the SharedWorker, then it will be initialized here
         // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url), { type: "module" })
         // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url))
-        this.webWorker = new window.Worker(new URL("runningTensorFlowModel_worker.js", import.meta.url))
+        this.webWorker = new window.Worker(new URL("/public/runningTensorFlowModel_worker.js", import.meta.url))
         this.webWorker.onerror = function(event) {
             console.log('There is an error with your worker!', event);
           }
