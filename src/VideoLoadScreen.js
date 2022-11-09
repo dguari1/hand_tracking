@@ -5,16 +5,16 @@ import  "./VideoLoadScreen.css";
 import TimelinePlugin from "wavesurfer.js/dist/plugin/wavesurfer.timeline.min.js";
 import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
 import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
-import { wait } from "@testing-library/user-event/dist/utils";
-import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
-import { TbRectangle } from "react-icons/tb";
+// import { wait } from "@testing-library/user-event/dist/utils";
+// import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
+// import { TbRectangle } from "react-icons/tb";
 // import CustomWavesurfer from "./CustomWaveSurfer";
 
-
-import {Pose} from "@mediapipe/pose"
-
+import * as poseDetection from '@tensorflow-models/pose-detection';
+import '@tensorflow/tfjs-backend-webgl';
+import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 const WaveSurfer = require("wavesurfer.js");
-const pixelmatch = require('pixelmatch');
+// const pixelmatch = require('pixelmatch');
 
 
 class VideoLoadScreen extends Component {
@@ -35,6 +35,8 @@ class VideoLoadScreen extends Component {
         this.canvasRef = createRef();
         this.canvasRefA = createRef();
         this.canvasRefB = createRef();
+
+        this.secondVideoRef = createRef()
 
         this.loadButtonTag = createRef();
         this.processVideoButtonTag =  createRef();
@@ -75,6 +77,9 @@ class VideoLoadScreen extends Component {
         this.workerModelIsReady = false; // this variable will hold the status of the workerModelIsReady
         this.poseModelReady = false;
         this.handsModelReady = false;
+
+        //models 
+        this.poseDetector = null; //
     }
 
     componentDidMount = () => {
@@ -132,41 +137,84 @@ class VideoLoadScreen extends Component {
           // create a way to remove regions by double click 
           this.waveSurferRef.current.on('region-dblclick', this.handleRegionDoubleClick)   
 
-          // mount the worker that will process the data +
-          if (this.webWorker === null) {
-            console.log('mounting worker')
-            this.handleMountWorker()
-          }
+        //   // mount the worker that will process the data +
+        //   if (this.webWorker === null) {
+        //     console.log('mounting worker')
+        //     this.handleMountWorker()
+        //   }
+
+        this.handleLoadModels()
 
     }
 
-    handleMountWorker = () => {
+    handleLoadModels = async() =>{
 
-        // here we declare a sharedWorker. The worker should have been initialized by the parent component. This will link this
-        // code to that worker and allow the code to use it. If the parent didn't initialize the SharedWorker, then it will be initialized here
-        // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url), { type: "module" })
-        // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url))
-        this.webWorker = new window.Worker(new URL("/public/runningTensorFlowModel_worker.js", import.meta.url))
-        this.webWorker.onerror = function(event) {
-            console.log('There is an error with your worker!', event);
-          }
-        // create a connection (port) with the SharedWorker so that we can send work to it
-        // this.webWorker.port.start();
-        // ask the worker to load the model
+
+        this.loadButtonTag.current.disabled = true
+        this.poseDetector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {runtime: 'tfjs', modelType:'lite'})
+
+        //run the model on an empty image to warm it 
+        this.canvasRefA.current.height = 240;
+        this.canvasRefA.current.width = 240;
+        var ctx = this.canvasRefA.current.getContext('2d',{willReadFrequently:true});
+        const imageData = ctx.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
+        const poses = await this.poseDetector.estimatePoses(imageData)
+        this.loadButtonTag.current.disabled = false
+        console.log('Pose Model Ready')
+        // // load the models
+        // this.modelPose = new Pose({locateFile: (file) => {
+
+        //     // if(file.endsWith(".data") || file.endsWith(".tflite")){
+        //     //     console.log(file)
+        //     //     return file;
+        //     // }else{
+        //     //     console.log(file)
+        //     //     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1635988162/${file}`;
+        //     // }
+        // //   console.log('Model', file)
+        //   return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
+        // }});
+        // this.modelPose.setOptions({
+        //     modelComplexity: 0,
+        //     smoothLandmarks: true,
+        //     enableSegmentation: false,
+        //     smoothSegmentation: false,
+        //     minDetectionConfidence: 0.5,
+        //     minTrackingConfidence: 0.5
+        //     })
+        // this.modelPose.onResults(this.onResultsPose);
+        // await this.modelPose.initialize()
+
+    }
+
+
+    // handleMountWorker = () => {
+
+    //     // here we declare a sharedWorker. The worker should have been initialized by the parent component. This will link this
+    //     // code to that worker and allow the code to use it. If the parent didn't initialize the SharedWorker, then it will be initialized here
+    //     // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url), { type: "module" })
+    //     // this.webWorker = new window.Worker(new URL("/workers/runningModel_worker.js", import.meta.url))
+    //     this.webWorker = new window.Worker(new URL("/public/runningTensorFlowModel_worker.js", import.meta.url))
+    //     this.webWorker.onerror = function(event) {
+    //         console.log('There is an error with your worker!', event);
+    //       }
+    //     // create a connection (port) with the SharedWorker so that we can send work to it
+    //     // this.webWorker.port.start();
+    //     // ask the worker to load the model
         
-        this.webWorker.postMessage({msg: 'init'})
+    //     this.webWorker.postMessage({msg: 'init'})
         
-        this.webWorker.onmessage = (event) => {
+    //     this.webWorker.onmessage = (event) => {
  
-            if ((event.data.poseModelReady) && (event.data.handsModelReady)){
-                this.poseModelReady = true;
-                this.handsModelReady = true;
-            }
+    //         if ((event.data.poseModelReady) && (event.data.handsModelReady)){
+    //             this.poseModelReady = true;
+    //             this.handsModelReady = true;
+    //         }
 
 
-        }
+    //     }
         
-    }
+    // }
 
     handleLoadedData = () =>{
 
@@ -225,7 +273,7 @@ class VideoLoadScreen extends Component {
     handleClick = (event) => {
         switch (event.target.value) {
             case 'previousFrame':
-                this.handleMoveBackward(1)     
+                this.handleMoveBackward(1)  
                 break;
             case 'previousFrame_5':
                 this.handleMoveBackward(5);
@@ -458,7 +506,7 @@ class VideoLoadScreen extends Component {
     }
 
     // callback that will be activated every time a seeking event ends
-    handleSeeked = () => {
+    handleSeeked = async() => {
 
         if (this.processVideos) {
             //send data to the worker to be processed 
@@ -467,14 +515,17 @@ class VideoLoadScreen extends Component {
             const imageData = ctxA.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
             //check if the models are ready 
 
-            if ((this.poseModelReady) && (this.handsModelReady)) {
-                this.webWorker.postMessage({
-                    "msg" : "frame",
-                    "data" : imageData.data.buffer,
-                    "width" : this.canvasRefA.current.width, 
-                    "height" : this.canvasRefA.current.height,
-                }, [imageData.data.buffer])
-            }
+            // if ((this.poseModelReady) && (this.handsModelReady)) {
+            //     this.webWorker.postMessage({
+            //         "msg" : "frame",
+            //         "data" : imageData.data.buffer,
+            //         "width" : this.canvasRefA.current.width, 
+            //         "height" : this.canvasRefA.current.height,
+            //     }, [imageData.data.buffer])
+            // }
+
+            const poses = await this.poseDetector.estimatePoses(imageData)
+            console.log(poses)
 
 
             
@@ -513,8 +564,8 @@ class VideoLoadScreen extends Component {
             this.arrayFrameRate.push(1/(currentVideoTime-this.previousTime))
             this.previousTime = currentVideoTime  
         }
-
-        if (this.frameCounter <=  30)
+        console.log(metadata.mediaTime)
+        if ((video.currentTime < video.duration) && (video.currentTime <=  1))
         {
             this.frameCounter++
             this.videoFrameCallbackRef = this.videoRef.current.requestVideoFrameCallback(this.findFrameRate)
@@ -618,7 +669,7 @@ class VideoLoadScreen extends Component {
                                             margin: "auto", 
                                             marginTop: "10px", 
                                             marginBottom: "10px",
-                                            // transform: "translateY(-100%)",
+                                            transform: "translateY(-100%)",
                                             //top: "-50%",
                                         }}/>
                     <div id="wave-timeline" ref={this.timeLineRef} style = {{width: "75%",}}></div>
@@ -648,7 +699,8 @@ class VideoLoadScreen extends Component {
                     ref={this.canvasRefA}
                     style={{width : '50%',
                             backgroundColor : 'rgba(0, 0, 255, 0.1)'}}
-                />      
+                />    
+                <video ref={this.secondVideoRef}/>  
                 {/* <canvas
                     ref={this.canvasRefB}
                     style= {{width : '20%'}}
