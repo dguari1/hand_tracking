@@ -18,8 +18,6 @@ var handDetector = null
 let canvas = null;
 let ctx = null;
 
-
-
 const setup = async () => {
 
     const detectorConfig = {
