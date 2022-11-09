@@ -1,5 +1,6 @@
 import React, { Component, createRef, useState, useEffect, useMemo, useCallback } from "react";
 import { average} from "./utils";
+import { videoProcess } from "./videoProcess";
 import  "./VideoLoadScreen.css";
 
 import TimelinePlugin from "wavesurfer.js/dist/plugin/wavesurfer.timeline.min.js";
@@ -11,8 +12,10 @@ import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
 // import CustomWavesurfer from "./CustomWaveSurfer";
 
 import * as poseDetection from '@tensorflow-models/pose-detection';
+import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
-import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
+import { toHaveDisplayValue } from "@testing-library/jest-dom/dist/matchers";
+//import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 const WaveSurfer = require("wavesurfer.js");
 // const pixelmatch = require('pixelmatch');
 
@@ -24,6 +27,7 @@ class VideoLoadScreen extends Component {
             videoWidth : '50%',
             mouseDown : false,
             rectangle : null,
+            cancelled : false,
         }
 
 
@@ -67,7 +71,8 @@ class VideoLoadScreen extends Component {
         this.coordsVideo = [];
 
         // finding the frame rate
-        this.previousTime = -1; 
+        this.previousTime = 0; 
+        this.previousFrame = 0
         this.frameCounter = 0; 
         this.arrayFrameRate = [ ]; // array that holds the frame rate estimates
         this.estimatedFrameRate = 0; // variable that holds the estimated frame rate
@@ -80,6 +85,7 @@ class VideoLoadScreen extends Component {
 
         //models 
         this.poseDetector = null; //
+        this.handsDetector = null; //
     }
 
     componentDidMount = () => {
@@ -159,8 +165,21 @@ class VideoLoadScreen extends Component {
         var ctx = this.canvasRefA.current.getContext('2d',{willReadFrequently:true});
         const imageData = ctx.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
         const poses = await this.poseDetector.estimatePoses(imageData)
-        this.loadButtonTag.current.disabled = false
+    
         console.log('Pose Model Ready')
+
+
+
+        const detectorConfig = {
+            runtime: 'tfjs',
+            solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands',
+            modelType: 'full'
+            }
+        this.handsDetector = await handPoseDetection.createDetector(handPoseDetection.SupportedModels.MediaPipeHands, detectorConfig);
+        const hands = await this.handsDetector.estimateHands(imageData)
+
+        console.log('Hands Model Ready')
+        this.loadButtonTag.current.disabled = false
         // // load the models
         // this.modelPose = new Pose({locateFile: (file) => {
 
@@ -220,6 +239,7 @@ class VideoLoadScreen extends Component {
 
         this.videoRef.current.play();
         this.videoRef.current.requestVideoFrameCallback(this.findFrameRate)
+        // 
     }
 
     handleRegionDoubleClick = (region) => {
@@ -295,8 +315,18 @@ class VideoLoadScreen extends Component {
                 this.inputFile.current.click();
                 break;
             case 'processVideo':
-                this.handlePause()
-                this.handleProcessVideo();
+                if (this.processVideoButtonTag.current.innerHTML === 'Process'){
+
+                    this.processVideoButtonTag.current.innerHTML = 'Cancel'
+                    this.handlePause()
+                    this.handleProcessVideo();
+
+                } else {
+                    // cancel
+                    this.setState({cancelled: true})
+                }
+                
+
                 break;
             case 'remove':
                 this.mouseDown = false;
@@ -448,7 +478,7 @@ class VideoLoadScreen extends Component {
 
     }
 
-    handleProcessVideo = () =>  {
+    handleProcessVideo = async () =>  {
         // only works if there is a video
         this.handlePause()
         if (this.videoRef.current) {
@@ -485,11 +515,30 @@ class VideoLoadScreen extends Component {
             }
 
             this.processVideos = true
+            // no cancel
+            this.setState({cancelled: false})
             this.currentRegion = 0 
-            // put video at the begining of current region, triggering the handleSeeked function
-            this.videoRef.current.currentTime = this.regions[this.currentRegion].start
+
+            this.videoRef.current.currentTime = this.regions[this.currentRegion].start;
 
         }
+    }
+
+    setTime = async(time) => {
+        this.videoRef.current.currentTime = await time
+
+    }
+
+    videoFrames = async(now, metadata) => {
+
+        var video = this.videoRef.current
+        var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
+        const imageData = ctxA.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
+        const poses = await this.poseDetector.estimatePoses(imageData)
+        console.log(poses)
+        console.log(metadata.mediaTime)
+        await this.videoRef.current.requestVideoFrameCallback(this.videoFrames)
+
     }
 
     getFrameImageData = (video,canvas) =>{
@@ -506,30 +555,17 @@ class VideoLoadScreen extends Component {
     }
 
     // callback that will be activated every time a seeking event ends
-    handleSeeked = async() => {
+    handleSeeked = async(event) => {
 
-        if (this.processVideos) {
+        if ((this.processVideos) && !(this.state.cancelled)) {
             //send data to the worker to be processed 
             var video = this.videoRef.current
             var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
             const imageData = ctxA.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
             //check if the models are ready 
 
-            // if ((this.poseModelReady) && (this.handsModelReady)) {
-            //     this.webWorker.postMessage({
-            //         "msg" : "frame",
-            //         "data" : imageData.data.buffer,
-            //         "width" : this.canvasRefA.current.width, 
-            //         "height" : this.canvasRefA.current.height,
-            //     }, [imageData.data.buffer])
-            // }
-
             const poses = await this.poseDetector.estimatePoses(imageData)
             console.log(poses)
-
-
-            
-
 
 
             var desiredVideoTime = video.currentTime + (1/this.estimatedFrameRate)
@@ -552,19 +588,28 @@ class VideoLoadScreen extends Component {
 
     }
 
-  
-
     findFrameRate = (now, metadata) => {
+
+        if (metadata.presentedFrames <= 5) {
+            this.previousFrame = metadata.presentedFrames
+            this.previousTime = metadata.mediaTime
+            this.videoFrameCallbackRef = this.videoRef.current.requestVideoFrameCallback(this.findFrameRate)
+
+        } else {
 
         const video = this.videoRef.current;
         const currentVideoTime = metadata.mediaTime
+        const currentVideoFrame = metadata.presentedFrames
+
+
 
         if (currentVideoTime !== this.previousTime){
             // console.log(1/(currentVideoTime-this.previousTime))
-            this.arrayFrameRate.push(1/(currentVideoTime-this.previousTime))
+            this.arrayFrameRate.push(Math.abs(currentVideoFrame-this.previousFrame)/Math.abs(currentVideoTime-this.previousTime))
             this.previousTime = currentVideoTime  
+            this.previousFrame = currentVideoFrame
         }
-        console.log(metadata.mediaTime)
+        // console.log(metadata.mediaTime, metadata.presentedFrames)
         if ((video.currentTime < video.duration) && (video.currentTime <=  1))
         {
             this.frameCounter++
@@ -573,17 +618,16 @@ class VideoLoadScreen extends Component {
         } else {
 
             this.handlePause()
-            this.estimatedFrameRate = average(this.arrayFrameRate.slice(5));
+            this.estimatedFrameRate = average(this.arrayFrameRate);
             console.log(this.estimatedFrameRate);
             this.frameCounter = 0;
             video.currentTime = 0;
             video.muted = false;      
         }
+        }
 
 
     }
-
-
 
     render () {
         return(
