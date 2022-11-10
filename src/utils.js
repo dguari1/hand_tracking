@@ -17,3 +17,13 @@ export function sumofSquares(arr) {
 export function dividebyValue(arr, value) {
     return arr.map(val => (val/value))
 }
+
+export function getStandardDeviation (array) {
+    var n = array.length
+    if (n==0) {
+        return 0
+    } else {
+    const mean = array.reduce((a, b) => a + b) / n
+    n = n - 1
+    return Math.sqrt(array.map(x => Math.pow(x - mean, 2)).reduce((a, b) => a + b) / n)}
+  }

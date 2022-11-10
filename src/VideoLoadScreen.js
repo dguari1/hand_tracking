@@ -1,5 +1,5 @@
 import React, { Component, createRef, useState, useEffect, useMemo, useCallback } from "react";
-import { average} from "./utils";
+import { average, getStandardDeviation} from "./utils";
 import { videoProcess } from "./videoProcess";
 import  "./VideoLoadScreen.css";
 
@@ -14,7 +14,7 @@ import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
 import * as poseDetection from '@tensorflow-models/pose-detection';
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
-import { toHaveDisplayValue } from "@testing-library/jest-dom/dist/matchers";
+import { toHaveDisplayValue, toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 //import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 const WaveSurfer = require("wavesurfer.js");
 // const pixelmatch = require('pixelmatch');
@@ -86,6 +86,11 @@ class VideoLoadScreen extends Component {
         //models 
         this.poseDetector = null; //
         this.handsDetector = null; //
+
+        this.distanceThumbIndex = {leftDistance : [ ],
+                                   leftTimeStamp : [ ],
+                                   rightDistance : [ ],
+                                   rightTimeStamp : [ ]}
     }
 
     componentDidMount = () => {
@@ -140,8 +145,9 @@ class VideoLoadScreen extends Component {
           this.ctx.strokeStyle = "red";
           this.ctx.lineWidth = 2;
 
-          // create a way to remove regions by double click 
+          // create a way to remove regions by double click and prevent more than two regions
           this.waveSurferRef.current.on('region-dblclick', this.handleRegionDoubleClick)   
+          this.waveSurferRef.current.on('region-created', this.handleRegionCreated)
 
         //   // mount the worker that will process the data +
         //   if (this.webWorker === null) {
@@ -151,9 +157,11 @@ class VideoLoadScreen extends Component {
 
         this.handleLoadModels()
 
+
     }
 
     handleLoadModels = async() =>{
+
 
 
         this.loadButtonTag.current.disabled = true
@@ -180,29 +188,6 @@ class VideoLoadScreen extends Component {
 
         console.log('Hands Model Ready')
         this.loadButtonTag.current.disabled = false
-        // // load the models
-        // this.modelPose = new Pose({locateFile: (file) => {
-
-        //     // if(file.endsWith(".data") || file.endsWith(".tflite")){
-        //     //     console.log(file)
-        //     //     return file;
-        //     // }else{
-        //     //     console.log(file)
-        //     //     return `https://cdn.jsdelivr.net/npm/@mediapipe/pose@0.5.1635988162/${file}`;
-        //     // }
-        // //   console.log('Model', file)
-        //   return `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`;
-        // }});
-        // this.modelPose.setOptions({
-        //     modelComplexity: 0,
-        //     smoothLandmarks: true,
-        //     enableSegmentation: false,
-        //     smoothSegmentation: false,
-        //     minDetectionConfidence: 0.5,
-        //     minTrackingConfidence: 0.5
-        //     })
-        // this.modelPose.onResults(this.onResultsPose);
-        // await this.modelPose.initialize()
 
     }
 
@@ -244,7 +229,19 @@ class VideoLoadScreen extends Component {
 
     handleRegionDoubleClick = (region) => {
         //remove the region when double click on it :->
-        region.remove()
+        this.waveSurferRef.current.regions.list[region.id].remove()
+
+    }
+
+    handleRegionCreated = (region) => {
+        // if there are more than two regions, then prevent more regions from being added
+        let regions = this.waveSurferRef.current.regions.list;
+        let keys = Object.keys(regions)
+        if (keys.length >= 2) {
+            regions[keys[0]].remove()
+            alert("You can only create two regions")
+        }
+
     }
 
     componentWillUnmount = () => {
@@ -323,7 +320,11 @@ class VideoLoadScreen extends Component {
 
                 } else {
                     // cancel
-                    this.setState({cancelled: true})
+                    
+                    this.setState({cancelled: true},
+                        () => {
+                        this.processVideoButtonTag.current.innerHTML = 'Process'
+                    })
                 }
                 
 
@@ -524,22 +525,17 @@ class VideoLoadScreen extends Component {
         }
     }
 
-    setTime = async(time) => {
-        this.videoRef.current.currentTime = await time
+    // videoFrames = async(now, metadata) => {
 
-    }
+    //     var video = this.videoRef.current
+    //     var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
+    //     const imageData = ctxA.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
+    //     const poses = await this.poseDetector.estimatePoses(imageData)
+    //     console.log(poses)
+    //     console.log(metadata.mediaTime)
+    //     await this.videoRef.current.requestVideoFrameCallback(this.videoFrames)
 
-    videoFrames = async(now, metadata) => {
-
-        var video = this.videoRef.current
-        var ctxA = this.getFrameImageData(video, this.canvasRefA.current)
-        const imageData = ctxA.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
-        const poses = await this.poseDetector.estimatePoses(imageData)
-        console.log(poses)
-        console.log(metadata.mediaTime)
-        await this.videoRef.current.requestVideoFrameCallback(this.videoFrames)
-
-    }
+    // }
 
     getFrameImageData = (video,canvas) =>{
 
@@ -554,6 +550,36 @@ class VideoLoadScreen extends Component {
         return ctx
     }
 
+    getHandLandmarks = async(handCenter, shoulder, ctx) =>{
+
+        const distanceHandShoulderX = Math.abs(handCenter[0] - shoulder[0])
+        const handImageData = ctx.getImageData(Math.round(handCenter[0] - distanceHandShoulderX),
+                                         Math.round(handCenter[1] - distanceHandShoulderX),
+                                         Math.round(2*distanceHandShoulderX),                   
+                                         Math.round(2*distanceHandShoulderX)) 
+        
+        const estimationConfig = {flipHorizontal: true};
+        const handLandmarks = await this.handsDetector.estimateHands(handImageData, estimationConfig)
+
+        // var ctxB = this.canvasRefB.current.getContext('2d')
+        // ctxB.putImageData(handImageData,0,0)
+
+
+        return handLandmarks
+    }
+
+    getDistanceThumbIndex = (landmakrs) => {
+
+        function distanceBetweenPoints (pointA, pointB) {
+            let x = pointA.x - pointB.x;
+            let y = pointA.y - pointB.y;
+            let z = pointA.z - pointB.z
+            return Math.sqrt(x*x + y*y + z*z)
+        }
+
+        return 0.7*distanceBetweenPoints(landmakrs[8], landmakrs[4]) + 0.2*distanceBetweenPoints(landmakrs[7], landmakrs[3])+ 0.1*distanceBetweenPoints(landmakrs[6], landmakrs[2])
+
+    }
     // callback that will be activated every time a seeking event ends
     handleSeeked = async(event) => {
 
@@ -564,8 +590,60 @@ class VideoLoadScreen extends Component {
             const imageData = ctxA.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
             //check if the models are ready 
 
-            const poses = await this.poseDetector.estimatePoses(imageData)
-            console.log(poses)
+
+            if ((this.poseDetector !== null) && (this.handsDetector !== null)) {
+                if (!this.checkboxRef.current.checked)   // user selected to process the full body
+                {
+                    const pose = await this.poseDetector.estimatePoses(imageData)
+                    if (pose.length == 1) // the model detected one person in the scene
+                    {
+                        var handCenterLeft = [(pose[0].keypoints[15].x + pose[0].keypoints[17].x + pose[0].keypoints[19].x + pose[0].keypoints[21].x)/4 , (pose[0].keypoints[15].y + pose[0].keypoints[17].y + pose[0].keypoints[19].y + pose[0].keypoints[21].y)/4 ]
+                        var handCenterRight = [(pose[0].keypoints[16].x + pose[0].keypoints[18].x + pose[0].keypoints[20].x + pose[0].keypoints[22].x)/4 , (pose[0].keypoints[16].y + pose[0].keypoints[18].y + pose[0].keypoints[20].y + pose[0].keypoints[22].y)/4 ]
+
+                        var shoulderLeft =  [pose[0].keypoints[11].x, pose[0].keypoints[11].y]
+                        var shoulderRight =  [pose[0].keypoints[12].x, pose[0].keypoints[12].y]
+
+                        // landmarks left hand
+                        var handLandmarksLeft = await this.getHandLandmarks(handCenterLeft, shoulderRight, ctxA)
+
+                        // landmarks right hand
+                        var handLandmarksRight = await this.getHandLandmarks(handCenterRight, shoulderLeft, ctxA)
+                        if (handLandmarksLeft.length == 1) {
+                            this.distanceThumbIndex.leftDistance.push(this.getDistanceThumbIndex(handLandmarksLeft[0].keypoints3D))
+                            this.distanceThumbIndex.leftTimeStamp.push(video.currentTime)
+                        }
+
+                        if (handLandmarksRight.length == 1) {
+                            this.distanceThumbIndex.rightDistance.push(this.getDistanceThumbIndex(handLandmarksRight[0].keypoints3D))
+                            this.distanceThumbIndex.rightTimeStamp.push(video.currentTime)
+                        }
+                    
+                    
+                    }
+
+                }  else // user selected to process only the hands
+                {   
+                    const estimationConfig = {flipHorizontal: true };
+                    const handLandmarks = await this.handsDetector.estimateHands(imageData, estimationConfig)
+                    if (handLandmarks.length == 1) {
+                        if (handLandmarks[0].handedness == "Right")
+                        {
+                            this.distanceThumbIndex.rightDistance.push(this.getDistanceThumbIndex(handLandmarks[0].keypoints3D))
+                            this.distanceThumbIndex.rightTimeStamp.push(video.currentTime)
+                        } else {
+
+                            this.distanceThumbIndex.leftDistance.push(this.getDistanceThumbIndex(handLandmarks[0].keypoints3D))
+                            this.distanceThumbIndex.leftTimeStamp.push(video.currentTime)
+
+                        }
+                    }
+                }
+
+                
+
+            }
+
+            
 
 
             var desiredVideoTime = video.currentTime + (1/this.estimatedFrameRate)
@@ -580,11 +658,20 @@ class VideoLoadScreen extends Component {
                     if (this.currentRegion < this.regions.length - 1) {
                         this.currentRegion++
                         video.currentTime = this.regions[this.currentRegion].start
+                    } else {
+                        // the process is finished 
+                        this.handleFinishProcessingVideo()
                     }
                 }
 
             }
     }
+
+    }
+
+    handleFinishProcessingVideo = () => {
+        console.log(average(this.distanceThumbIndex.rightDistance), getStandardDeviation(this.distanceThumbIndex.rightDistance))
+        console.log(average(this.distanceThumbIndex.leftDistance), getStandardDeviation(this.distanceThumbIndex.leftDistance))
 
     }
 
@@ -627,6 +714,14 @@ class VideoLoadScreen extends Component {
         }
 
 
+    }
+
+    handleMouseDown2 = (event) => {
+        //get mouse position in canvas when click
+        event.preventDefault();
+        event.stopPropagation();
+        var pos = this.getMousePosition(event, this.canvasRefA.current)
+        console.log(pos)
     }
 
     render () {
@@ -741,15 +836,18 @@ class VideoLoadScreen extends Component {
 
                 <canvas
                     ref={this.canvasRefA}
+                    onMouseDown = {this.handleMouseDown2}
                     style={{width : '50%',
-                            backgroundColor : 'rgba(0, 0, 255, 0.1)'}}
+                            backgroundColor : 'rgba(0, 0, 255, 0.1)',
+                            display : 'none'}}
                 />    
                 <video ref={this.secondVideoRef}/>  
-                {/* <canvas
+                <canvas
                     ref={this.canvasRefB}
-                    style= {{width : '20%'}}
-                    // style={{display : 'none'}}
-                />  */}
+                    style={{width : '50%',
+                            backgroundColor : 'rgba(0, 0, 255, 0.1)',
+                            display : 'none'}}
+                /> 
             </div>
 
         );
