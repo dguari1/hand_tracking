@@ -20,7 +20,7 @@ export function dividebyValue(arr, value) {
 
 export function getStandardDeviation (array) {
     var n = array.length
-    if (n==0) {
+    if (n===0) {
         return 0
     } else {
     const mean = array.reduce((a, b) => a + b) / n

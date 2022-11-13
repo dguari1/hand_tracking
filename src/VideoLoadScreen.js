@@ -3,6 +3,8 @@ import { average, getStandardDeviation} from "./utils";
 import { videoProcess } from "./videoProcess";
 import  "./VideoLoadScreen.css";
 
+import ShowResults from "./ShowResults.js"
+
 import TimelinePlugin from "wavesurfer.js/dist/plugin/wavesurfer.timeline.min.js";
 import CursorPlugin from "wavesurfer.js/dist/plugin/wavesurfer.cursor.min.js";
 import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
@@ -28,6 +30,7 @@ class VideoLoadScreen extends Component {
             mouseDown : false,
             rectangle : null,
             cancelled : false,
+            showResults : false
         }
 
 
@@ -78,8 +81,8 @@ class VideoLoadScreen extends Component {
         this.estimatedFrameRate = 0; // variable that holds the estimated frame rate
 
         //webworker
-        this.webWorker = null; // this variable will hold the webWorker
-        this.workerModelIsReady = false; // this variable will hold the status of the workerModelIsReady
+        //this.webWorker = null; // this variable will hold the webWorker
+        //this.workerModelIsReady = false; // this variable will hold the status of the workerModelIsReady
         this.poseModelReady = false;
         this.handsModelReady = false;
 
@@ -91,6 +94,13 @@ class VideoLoadScreen extends Component {
                                    leftTimeStamp : [ ],
                                    rightDistance : [ ],
                                    rightTimeStamp : [ ]}
+
+        this.landmarks  = {landmarksRight : [],
+                           timeStampRight : [],
+                           landmarksLeft : [],
+                           timeStampLeft : [],
+                           bboxX : 0,
+                           bboxY : 0 }
     }
 
     componentDidMount = () => {
@@ -595,7 +605,7 @@ class VideoLoadScreen extends Component {
                 if (!this.checkboxRef.current.checked)   // user selected to process the full body
                 {
                     const pose = await this.poseDetector.estimatePoses(imageData)
-                    if (pose.length == 1) // the model detected one person in the scene
+                    if (pose.length === 1) // the model detected one person in the scene
                     {
                         var handCenterLeft = [(pose[0].keypoints[15].x + pose[0].keypoints[17].x + pose[0].keypoints[19].x + pose[0].keypoints[21].x)/4 , (pose[0].keypoints[15].y + pose[0].keypoints[17].y + pose[0].keypoints[19].y + pose[0].keypoints[21].y)/4 ]
                         var handCenterRight = [(pose[0].keypoints[16].x + pose[0].keypoints[18].x + pose[0].keypoints[20].x + pose[0].keypoints[22].x)/4 , (pose[0].keypoints[16].y + pose[0].keypoints[18].y + pose[0].keypoints[20].y + pose[0].keypoints[22].y)/4 ]
@@ -605,17 +615,23 @@ class VideoLoadScreen extends Component {
 
                         // landmarks left hand
                         var handLandmarksLeft = await this.getHandLandmarks(handCenterLeft, shoulderRight, ctxA)
-
-                        // landmarks right hand
-                        var handLandmarksRight = await this.getHandLandmarks(handCenterRight, shoulderLeft, ctxA)
-                        if (handLandmarksLeft.length == 1) {
+                        if (handLandmarksLeft.length === 1) {
                             this.distanceThumbIndex.leftDistance.push(this.getDistanceThumbIndex(handLandmarksLeft[0].keypoints3D))
                             this.distanceThumbIndex.leftTimeStamp.push(video.currentTime)
-                        }
 
-                        if (handLandmarksRight.length == 1) {
+                            //save landmarks for future use 
+                            this.landmarks.landmarksLeft.push(handLandmarksLeft)
+                            this.landmarks.timeStampLeft.push(video.currentTime)
+                        }
+                        // landmarks right hand
+                        var handLandmarksRight = await this.getHandLandmarks(handCenterRight, shoulderLeft, ctxA)
+                        if (handLandmarksRight.length === 1) {
                             this.distanceThumbIndex.rightDistance.push(this.getDistanceThumbIndex(handLandmarksRight[0].keypoints3D))
                             this.distanceThumbIndex.rightTimeStamp.push(video.currentTime)
+
+                            //save landmarks for future use 
+                            this.landmarks.landmarksRight.push(handLandmarksRight)
+                            this.landmarks.timeStampRight.push(video.currentTime)
                         }
                     
                     
@@ -625,8 +641,8 @@ class VideoLoadScreen extends Component {
                 {   
                     const estimationConfig = {flipHorizontal: true };
                     const handLandmarks = await this.handsDetector.estimateHands(imageData, estimationConfig)
-                    if (handLandmarks.length == 1) {
-                        if (handLandmarks[0].handedness == "Right")
+                    if (handLandmarks.length === 1) {
+                        if (handLandmarks[0].handedness === "Right")
                         {
                             this.distanceThumbIndex.rightDistance.push(this.getDistanceThumbIndex(handLandmarks[0].keypoints3D))
                             this.distanceThumbIndex.rightTimeStamp.push(video.currentTime)
@@ -672,6 +688,8 @@ class VideoLoadScreen extends Component {
     handleFinishProcessingVideo = () => {
         console.log(average(this.distanceThumbIndex.rightDistance), getStandardDeviation(this.distanceThumbIndex.rightDistance))
         console.log(average(this.distanceThumbIndex.leftDistance), getStandardDeviation(this.distanceThumbIndex.leftDistance))
+
+        this.setState({showResults:true})
 
     }
 
@@ -823,7 +841,6 @@ class VideoLoadScreen extends Component {
                 <label  htmlFor='checkbox' style={{marginTop:'1em'}}>Full Body </label>
                 
                 <label className="switch" id ="toggle-button">
-
                     <input type="checkbox" id='checkbox' ref={this.checkboxRef}/>
                     <span className="slider"> </span>
                 </label>
@@ -848,6 +865,8 @@ class VideoLoadScreen extends Component {
                             backgroundColor : 'rgba(0, 0, 255, 0.1)',
                             display : 'none'}}
                 /> 
+
+                {this.state.showResults? <ShowResults/> :null}
             </div>
 
         );

@@ -9,7 +9,7 @@ import "./style_menu.css";
 import {Home} from "./Home";
 import WebCamRecord from "./WebCamRecord";
 import VideoLoadScreen from './VideoLoadScreen';
-//import WebCamAnalysis from "./WebCamAnalysis";
+import ShowResults from './ShowResults.js'
 
 function App() {
 
@@ -84,6 +84,7 @@ function App() {
   { showHome ? <Home /> : null }
   { showRecord ? <WebCamRecord /> : null }
   { showVideoAnalysis ? <VideoLoadScreen /> : null }
+  { showAbout ? <ShowResults /> : null}
 
   </>
 );
