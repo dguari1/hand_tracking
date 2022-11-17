@@ -379,12 +379,34 @@ class VideoLoadScreen extends Component {
 
     handleMoveBackward = (nFrames) => {
         // Move video backward
-        console.log(nFrames)
+        if(this.videoRef.current !== null) {
+            if ( this.estimatedFrameRate > 0) {
+                const proposedTime = this.videoRef.current.currentTime - nFrames/this.estimatedFrameRate;
+                if (proposedTime >= 0) {
+                    this.handlePause();
+                    this.videoRef.current.currentTime = proposedTime;
+                } else {
+                    this.handlePause();
+                    this.videoRef.current.currentTime = 0;
+                }
+            }
+        }
     }
 
     handleMoveForward = (nFrames) => {
         // Move video forward
-        console.log(nFrames)
+        if(this.videoRef.current !== null) {
+            if ( this.estimatedFrameRate > 0) {
+                const proposedTime = this.videoRef.current.currentTime + nFrames/this.estimatedFrameRate;
+                if (proposedTime <= this.videoRef.current.duration) {
+                    this.handlePause();
+                    this.videoRef.current.currentTime = proposedTime;
+                } else {
+                    this.handlePause();
+                    this.videoRef.current.currentTime = this.duration;
+                }
+            }
+        }
     }
 
     handlePause = () => {
@@ -895,7 +917,7 @@ class VideoLoadScreen extends Component {
                                             margin: "auto", 
                                             marginTop: "10px", 
                                             marginBottom: "10px",
-                                            transform: "translateY(-100%)",
+                                            // transform: "translateY(-100%)",
                                             //top: "-50%",
                                         }}/>
                     <div id="wave-timeline" ref={this.timeLineRef} style = {{width: "75%",}}></div>
