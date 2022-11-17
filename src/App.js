@@ -1,4 +1,4 @@
-import logo from './logo.svg';
+// import logo from './hand-pointer-regular.svg';
 import './App.css';
 import { useState, useEffect } from "react";
 
@@ -32,7 +32,6 @@ function App() {
 
 
   function handleClick(event) {
-    console.log(event.target.id)
     switch (event.target.id) {
       case 'home':
         setShowHome(true);

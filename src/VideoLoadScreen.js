@@ -12,8 +12,10 @@ import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
 // import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 // import { TbRectangle } from "react-icons/tb";
 // import CustomWavesurfer from "./CustomWaveSurfer";
+// import '@mediapipe/pose';
 
-import * as poseDetection from '@tensorflow-models/pose-detection';
+
+// import * as poseDetection from '@tensorflow-models/pose-detection'
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
 import { toHaveDisplayValue, toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
@@ -30,7 +32,8 @@ class VideoLoadScreen extends Component {
             mouseDown : false,
             rectangle : null,
             cancelled : false,
-            showResults : false
+            showResults : false,
+            fileName : null,
         }
 
 
@@ -90,17 +93,28 @@ class VideoLoadScreen extends Component {
         this.poseDetector = null; //
         this.handsDetector = null; //
 
-        this.distanceThumbIndex = {leftDistance : [ ],
+        //this variable will store the estimated distnace between thumb and index 
+        this.distanceThumbIndex = [{leftDistance : [ ],
                                    leftTimeStamp : [ ],
                                    rightDistance : [ ],
-                                   rightTimeStamp : [ ]}
+                                   rightTimeStamp : [ ]}, 
+                                   {leftDistance : [ ],
+                                    leftTimeStamp : [ ],
+                                    rightDistance : [ ],
+                                    rightTimeStamp : [ ]}, 
+                                ]
 
-        this.landmarks  = {landmarksRight : [],
+
+        //this variable will store the landmarks                            
+        this.landmarks  = [{landmarksRight : [],
                            timeStampRight : [],
                            landmarksLeft : [],
-                           timeStampLeft : [],
-                           bboxX : 0,
-                           bboxY : 0 }
+                           timeStampLeft : [],}, 
+                           {landmarksRight : [],
+                           timeStampRight : [],
+                           landmarksLeft : [],
+                           timeStampLeft : [],}]
+
     }
 
     componentDidMount = () => {
@@ -165,35 +179,27 @@ class VideoLoadScreen extends Component {
         //     this.handleMountWorker()
         //   }
 
-        this.handleLoadModels()
+        this.handleLoadHandsModels()
 
 
     }
 
-    handleLoadModels = async() =>{
-
-
-
+    handleLoadHandsModels = async() =>{
+        //hand model is always loaded
         this.loadButtonTag.current.disabled = true
-        this.poseDetector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {runtime: 'tfjs', modelType:'lite'})
-
-        //run the model on an empty image to warm it 
         this.canvasRefA.current.height = 240;
         this.canvasRefA.current.width = 240;
         var ctx = this.canvasRefA.current.getContext('2d',{willReadFrequently:true});
         const imageData = ctx.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
-        const poses = await this.poseDetector.estimatePoses(imageData)
-    
-        console.log('Pose Model Ready')
-
-
 
         const detectorConfig = {
             runtime: 'tfjs',
+            //runtime: 'mediapipe',
             solutionPath: 'https://cdn.jsdelivr.net/npm/@mediapipe/hands',
             modelType: 'full'
             }
         this.handsDetector = await handPoseDetection.createDetector(handPoseDetection.SupportedModels.MediaPipeHands, detectorConfig);
+        //warm up the model
         const hands = await this.handsDetector.estimateHands(imageData)
 
         console.log('Hands Model Ready')
@@ -201,6 +207,23 @@ class VideoLoadScreen extends Component {
 
     }
 
+    handleLoadPoseModel = async(poseDetection) => {
+        //pose model is loaded on demand
+        this.loadButtonTag.current.disabled = true
+        this.poseDetector = await poseDetection.createDetector(poseDetection.SupportedModels.BlazePose, {runtime: 'tfjs', modelType:'lite'})
+ 
+        // //run the model on an empty image to warm it 
+        this.canvasRefA.current.height = 240;
+        this.canvasRefA.current.width = 240;
+        var ctx = this.canvasRefA.current.getContext('2d',{willReadFrequently:true});
+        const imageData = ctx.getImageData(0,0,this.canvasRefA.current.width, this.canvasRefA.current.height)
+        //warm up the model
+        const poses = await this.poseDetector.estimatePoses(imageData)
+    
+        console.log('Pose Model Ready')
+        this.loadButtonTag.current.disabled = false
+
+    }
 
     // handleMountWorker = () => {
 
@@ -417,7 +440,7 @@ class VideoLoadScreen extends Component {
             console.log(event.target.error);
         };
         reader.readAsDataURL(file);
-        this.setState({file_name : file.name})
+        this.setState({fileName : file.name})
 
     }
 
@@ -490,10 +513,42 @@ class VideoLoadScreen extends Component {
     }
 
     handleProcessVideo = async () =>  {
+
+        this.setState({showResults:false})
+        //load pose mode if needed
+        if (this.checkboxRef.current.checked) {
+            if (this.poseDetector === null) { // no pose model, load it 
+                import ("@tensorflow-models/pose-detection").then(poseDetection =>{
+                    this.handleLoadPoseModel(poseDetection)
+                });
+            }
+        }
+
+        //reset variables 
+        //this variable will store the estimated distnace between thumb and index 
+        this.distanceThumbIndex = [{leftDistance : [ ],
+                                    leftTimeStamp : [ ],
+                                    rightDistance : [ ],
+                                    rightTimeStamp : [ ]}, 
+                                    {leftDistance : [ ],
+                                    leftTimeStamp : [ ],
+                                    rightDistance : [ ],
+                                    rightTimeStamp : [ ]}, ]
+
+
+        //this variable will store the landmarks                            
+        this.landmarks  = [{landmarksRight : [],
+                            timeStampRight : [],
+                            landmarksLeft : [],
+                            timeStampLeft : [],}, 
+                            {landmarksRight : [],
+                            timeStampRight : [],
+                            landmarksLeft : [],
+                            timeStampLeft : [],}]
+
         // only works if there is a video
         this.handlePause()
         if (this.videoRef.current) {
-            var handsOnly = this.checkboxRef.current.checked
             if (this.state.rectangle !== null) {            
                 var x1 = parseInt((this.state.rectangle.x1 / this.canvasRef.current.width) * this.videoRef.current.videoWidth);
                 var y1 = parseInt((this.state.rectangle.y1 / this.canvasRef.current.height) * this.videoRef.current.videoHeight);
@@ -571,10 +626,6 @@ class VideoLoadScreen extends Component {
         const estimationConfig = {flipHorizontal: true};
         const handLandmarks = await this.handsDetector.estimateHands(handImageData, estimationConfig)
 
-        // var ctxB = this.canvasRefB.current.getContext('2d')
-        // ctxB.putImageData(handImageData,0,0)
-
-
         return handLandmarks
     }
 
@@ -601,9 +652,9 @@ class VideoLoadScreen extends Component {
             //check if the models are ready 
 
 
-            if ((this.poseDetector !== null) && (this.handsDetector !== null)) {
-                if (!this.checkboxRef.current.checked)   // user selected to process the full body
-                {
+            if (this.handsDetector !== null) {
+                if ((this.checkboxRef.current.checked) && (this.poseDetector !== null))  // user selected to process the full body and there is a pose detection model 
+                { //
                     const pose = await this.poseDetector.estimatePoses(imageData)
                     if (pose.length === 1) // the model detected one person in the scene
                     {
@@ -613,54 +664,68 @@ class VideoLoadScreen extends Component {
                         var shoulderLeft =  [pose[0].keypoints[11].x, pose[0].keypoints[11].y]
                         var shoulderRight =  [pose[0].keypoints[12].x, pose[0].keypoints[12].y]
 
-                        // landmarks left hand
+                        // landmarks left hand -- store everything for later use
                         var handLandmarksLeft = await this.getHandLandmarks(handCenterLeft, shoulderRight, ctxA)
                         if (handLandmarksLeft.length === 1) {
-                            this.distanceThumbIndex.leftDistance.push(this.getDistanceThumbIndex(handLandmarksLeft[0].keypoints3D))
-                            this.distanceThumbIndex.leftTimeStamp.push(video.currentTime)
-
-                            //save landmarks for future use 
-                            this.landmarks.landmarksLeft.push(handLandmarksLeft)
-                            this.landmarks.timeStampLeft.push(video.currentTime)
+                            this.distanceThumbIndex[this.currentRegion].leftDistance.push(this.getDistanceThumbIndex(handLandmarksLeft[0].keypoints3D))
+                            this.distanceThumbIndex[this.currentRegion].leftTimeStamp.push(video.currentTime)
+                            this.landmarks[this.currentRegion].landmarksLeft.push(handLandmarksLeft)
+                            this.landmarks[this.currentRegion].timeStampLeft.push(video.currentTime)
                         }
-                        // landmarks right hand
+                        // landmarks right hand -- store everything for later use
                         var handLandmarksRight = await this.getHandLandmarks(handCenterRight, shoulderLeft, ctxA)
                         if (handLandmarksRight.length === 1) {
-                            this.distanceThumbIndex.rightDistance.push(this.getDistanceThumbIndex(handLandmarksRight[0].keypoints3D))
-                            this.distanceThumbIndex.rightTimeStamp.push(video.currentTime)
-
-                            //save landmarks for future use 
-                            this.landmarks.landmarksRight.push(handLandmarksRight)
-                            this.landmarks.timeStampRight.push(video.currentTime)
+                            this.distanceThumbIndex[this.currentRegion].rightDistance.push(this.getDistanceThumbIndex(handLandmarksRight[0].keypoints3D))
+                            this.distanceThumbIndex[this.currentRegion].rightTimeStamp.push(video.currentTime)
+                            this.landmarks[this.currentRegion].landmarksRight.push(handLandmarksRight)
+                            this.landmarks[this.currentRegion].timeStampRight.push(video.currentTime)
                         }
                     
-                    
-                    }
+                    } else
+                    // if 0 or more than 1 person are detected then stop and alert the user
+                     {if (pose.length === 0) {
+                        alert('No person found')
+                        this.setState({cancelled: true},
+                            () => {
+                            this.processVideoButtonTag.current.innerHTML = 'Process'
+                        })
+                     } else if (pose.lenght > 1){
+                        alert('More than one person found')
+                        this.setState({cancelled: true},
+                            () => {
+                            this.processVideoButtonTag.current.innerHTML = 'Process'
+                        })
+                       }}
 
                 }  else // user selected to process only the hands
                 {   
                     const estimationConfig = {flipHorizontal: true };
                     const handLandmarks = await this.handsDetector.estimateHands(imageData, estimationConfig)
-                    if (handLandmarks.length === 1) {
-                        if (handLandmarks[0].handedness === "Right")
-                        {
-                            this.distanceThumbIndex.rightDistance.push(this.getDistanceThumbIndex(handLandmarks[0].keypoints3D))
-                            this.distanceThumbIndex.rightTimeStamp.push(video.currentTime)
-                        } else {
-
-                            this.distanceThumbIndex.leftDistance.push(this.getDistanceThumbIndex(handLandmarks[0].keypoints3D))
-                            this.distanceThumbIndex.leftTimeStamp.push(video.currentTime)
-
-                        }
+                    if (handLandmarks) {
+                        handLandmarks.forEach(item => {
+                            if (item.handedness === 'Right') {
+                                this.distanceThumbIndex[this.currentRegion].rightDistance.push(this.getDistanceThumbIndex(item.keypoints3D))
+                                this.distanceThumbIndex[this.currentRegion].rightTimeStamp.push(video.currentTime)
+                                this.landmarks[this.currentRegion].landmarksRight.push(item)
+                                this.landmarks[this.currentRegion].timeStampRight.push(video.currentTime)
+                            } else {
+                                this.distanceThumbIndex[this.currentRegion].leftDistance.push(this.getDistanceThumbIndex(item.keypoints3D))
+                                this.distanceThumbIndex[this.currentRegion].leftTimeStamp.push(video.currentTime)
+                                this.landmarks[this.currentRegion].landmarksLeft.push(item)
+                                this.landmarks[this.currentRegion].timeStampLeft.push(video.currentTime)
+                            }
+                        })
+                    } else {
+                        alert('No hands detected')
+                        this.setState({cancelled: true},
+                            () => {
+                            this.processVideoButtonTag.current.innerHTML = 'Process'
+                        })
                     }
-                }
 
-                
+                }          
 
             }
-
-            
-
 
             var desiredVideoTime = video.currentTime + (1/this.estimatedFrameRate)
 
@@ -676,7 +741,11 @@ class VideoLoadScreen extends Component {
                         video.currentTime = this.regions[this.currentRegion].start
                     } else {
                         // the process is finished 
-                        this.handleFinishProcessingVideo()
+                        this.setState({cancelled: true},
+                            () => {
+                            this.processVideoButtonTag.current.innerHTML = 'Process'
+                            this.handleFinishProcessingVideo()
+                        })
                     }
                 }
 
@@ -686,9 +755,9 @@ class VideoLoadScreen extends Component {
     }
 
     handleFinishProcessingVideo = () => {
-        console.log(average(this.distanceThumbIndex.rightDistance), getStandardDeviation(this.distanceThumbIndex.rightDistance))
-        console.log(average(this.distanceThumbIndex.leftDistance), getStandardDeviation(this.distanceThumbIndex.leftDistance))
 
+        console.log('landmarks', this.landmarks)
+        console.log('distance', this.distanceThumbIndex)
         this.setState({showResults:true})
 
     }
@@ -838,19 +907,26 @@ class VideoLoadScreen extends Component {
                 </div>
 
                 <div className="toggle" style={{display:'inline'}}>
-                <label  htmlFor='checkbox' style={{marginTop:'1em'}}>Full Body </label>
+                <label  htmlFor='checkbox' style={{marginTop:'1em'}}>Hands Only </label>
                 
                 <label className="switch" id ="toggle-button">
                     <input type="checkbox" id='checkbox' ref={this.checkboxRef}/>
                     <span className="slider"> </span>
                 </label>
 
-                <label htmlFor='checkbox'> Hands Only</label>
+                <label htmlFor='checkbox'> Full Body</label>
 
                 </div>
 
-                </center>
+                
 
+                {this.state.showResults? <ShowResults landmarks = {this.landmarks}
+                                                      distanceThumbIndex = {this.distanceThumbIndex}
+                                                      coordsRectangleinVideo = {this.coordsVideo}
+                                                      frameRate = {this.estimatedFrameRate}
+                                                      fileName = {this.state.fileName}
+                /> :null}
+                </center>
                 <canvas
                     ref={this.canvasRefA}
                     onMouseDown = {this.handleMouseDown2}
@@ -865,8 +941,6 @@ class VideoLoadScreen extends Component {
                             backgroundColor : 'rgba(0, 0, 255, 0.1)',
                             display : 'none'}}
                 /> 
-
-                {this.state.showResults? <ShowResults/> :null}
             </div>
 
         );
