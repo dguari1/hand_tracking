@@ -6,7 +6,7 @@ import  "./WebCamRecord.css";
 import fixWebmDuration from "fix-webm-duration";
 
 const FRAMES_TO_SKIP = 5; // this variable set the number of frames skipped during video processing. Five (5) frames seems to be a good compromise between performance and smoothness 
-const DEFAULT_MAX_DURATION_TASK = 15; // this variable set the maximum duration of the task.
+const DEFAULT_MAX_DURATION_TASK = 30; // this variable set the maximum duration of the task.
 
 class WebCamRecord extends Component {
     constructor(props) {
@@ -390,7 +390,6 @@ class WebCamRecord extends Component {
                         zIndex : 2 // this canvas is in layer 2
                     }}
                 />     
-                <button id='buttonFigure' type="button" value='record' ref={this.recordButtonTag} onClick={this.handleClick} >Record</button>
                 </div>
                 <figcaption>
                     <p> </p>
@@ -398,6 +397,7 @@ class WebCamRecord extends Component {
                 <progress ref = {this.progressTag} max="100" value="0">Progress</progress>
                 </figcaption>
                 </figure>
+                <button type="button" value='record' ref={this.recordButtonTag} onClick={this.handleClick} >Record</button> <br/>
                 <button type="button" value='save' ref={this.saveButtonTag}  onClick={this.handleClick} disabled={this.state.buttonDisabled}>Save</button>
 
                 

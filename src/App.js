@@ -61,6 +61,9 @@ function App() {
         setShowAbout(true);
         closeSideBar()
         break;
+      case 'documentation':
+        window.open("https://dguari1.github.io/hand_tracking_documentation/");
+        break
       default:
         break;
     }
@@ -77,6 +80,7 @@ function App() {
         <a id="home" className="menu-item" onClick={handleClick}>Home</a>
         <a id="record" className="menu-item" onClick={handleClick}>Record</a>
         <a id="videoanalysis" className="menu-item" onClick={handleClick}>Video Analysis</a>
+        <a id="documentation" className="menu-item" onClick={handleClick}>Documentation</a>
         <a id="about" className="menu-item--small" onClick={handleClick}>About</a>
   </Menu>
 

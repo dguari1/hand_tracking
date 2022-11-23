@@ -46,7 +46,7 @@
     min-height: 5%;
     left: 37.5%;
     top: 90%;
-    z-index: 100;
+    z-index: 10000000;
   }
   
   .vslp-webcam button {
