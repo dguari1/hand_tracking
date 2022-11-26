@@ -10,6 +10,7 @@ import {Home} from "./Home";
 import WebCamRecord from "./WebCamRecord";
 import VideoLoadScreen from './VideoLoadScreen';
 import ShowResults from './ShowResults.js'
+import DataAnalysis from './DataAnalysis';
 
 function App() {
 
@@ -19,6 +20,7 @@ function App() {
   const [showRecord, setShowRecord] = useState(false);
   const [showVideoAnalysis, setShowVideoAnalysis] = useState(false);
   const [showAbout, setShowAbout] = useState(false);
+  const [showDataAnalysis, setShowDataAnalysis] = useState(false)
 
   const [isOpen, setOpen] = useState(false)
 
@@ -38,6 +40,7 @@ function App() {
         setShowRecord(false);
         setShowVideoAnalysis(false);
         setShowAbout(false);
+        setShowDataAnalysis(false)
         closeSideBar()
         break;
       case 'record':
@@ -45,6 +48,7 @@ function App() {
         setShowRecord(true);
         setShowVideoAnalysis(false);
         setShowAbout(false);
+        setShowDataAnalysis(false)
         closeSideBar()
         break;
       case 'videoanalysis':
@@ -52,6 +56,7 @@ function App() {
         setShowRecord(false);
         setShowVideoAnalysis(true);
         setShowAbout(false);
+        setShowDataAnalysis(false)
         closeSideBar()
         break;
       case 'about':
@@ -59,6 +64,15 @@ function App() {
         setShowRecord(false);
         setShowVideoAnalysis(false);
         setShowAbout(true);
+        setShowDataAnalysis(false)
+        closeSideBar()
+        break;
+      case 'dataanalysis': 
+        setShowHome(false);
+        setShowRecord(false);
+        setShowVideoAnalysis(false);
+        setShowAbout(false);
+        setShowDataAnalysis(true)
         closeSideBar()
         break;
       case 'documentation':
@@ -81,6 +95,7 @@ function App() {
         <a id="record" className="menu-item" onClick={handleClick}>Record</a>
         <a id="videoanalysis" className="menu-item" onClick={handleClick}>Video Analysis</a>
         <a id="documentation" className="menu-item" onClick={handleClick}>Documentation</a>
+        <a id="dataanalysis" className="menu-item" onClick={handleClick}>Data Analysis</a>
         <a id="about" className="menu-item--small" onClick={handleClick}>About</a>
   </Menu>
 
@@ -88,6 +103,7 @@ function App() {
   { showRecord ? <WebCamRecord /> : null }
   { showVideoAnalysis ? <VideoLoadScreen /> : null }
   { showAbout ? <ShowResults /> : null}
+  {showDataAnalysis ? <DataAnalysis /> : null}
 
   </>
 );

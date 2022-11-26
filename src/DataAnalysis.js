@@ -12,7 +12,7 @@ import { toHaveDescription, toHaveStyle } from "@testing-library/jest-dom/dist/m
 
 
 
-class ShowResults extends Component {
+class DataAnalysis extends Component {
     constructor(props) {
         super(props);
         this.state = {
@@ -29,6 +29,7 @@ class ShowResults extends Component {
         this.plotRight = createRef();
         this.labelLeft = createRef();
         this.labelRight = createRef();
+        this.inputFile = createRef();
 
         this.dataLeft = []
         this.timeStampLeft = []
@@ -63,10 +64,10 @@ class ShowResults extends Component {
         this.labelLeft.current.innerHTML = this.sliderLeftRef.current.value + 's'
         this.labelRight.current.innerHTML = this.sliderRightRef.current.value + 's'
 
-        this.handleProcessInputData()
-        // this.handleCreatePredefinedData()
-        this.handleFilterData()
-        this.handleFindPeaksinData()
+        //this.handleProcessInputData()
+       // this.handleCreatePredefinedData()
+       // this.handleFilterData()
+        //this.handleFindPeaksinData()
     }
 
     componentWillUnmount = () => {
@@ -119,7 +120,7 @@ class ShowResults extends Component {
                         this.selectedPointLeft = {}
                         this.setState({isMarkUp : false})
                         this.setState({revision : this.state.revision + 1})
-                    } 
+                } 
                 break;
             case 'Escape' :
                 if (this.state.isMarkUp){
@@ -1525,6 +1526,10 @@ class ShowResults extends Component {
                 fileName = this.fileName.split(".")[0]+'-peaks.json';
                 this.handleSave(item,fileName)
                 break;
+            case 'loadsignals':
+                this.inputFile.current.click();
+                break;
+                break;
             default:
                 break
         }
@@ -1549,13 +1554,60 @@ class ShowResults extends Component {
         window.URL.revokeObjectURL(url);
     }
 
+    handleFileUpload = (event) => {
+        const file = event.target.files[0];
+
+        let reader = new FileReader();
+        reader.onload = (e) => {
+            var data = JSON.parse(e.target.result)
+            this.dataLeft = data.dataLeft;
+            this.timeStampLeft = data.timeLeft
+            this.dataRight = data.dataRight
+            this.timeStampRight = data.timeRight
+
+            const tempA = this.timeStampLeft.slice(1)
+            const tempB = this.timeStampLeft.slice(0,-1)
+            var diff = tempA.map((value,index) => value - tempB[index])
+            this.frameRate = 1/average(diff)
+
+            this.handleFilterData()
+            this.handleFindPeaksinData()
+            //console.log(e.target.results['dataRight'])
+        }
+
+        // reader.onloadstart = (e) => {
+        //     //this.videoRef.current.poster = 'loading-gif2.gif'
+        //     this.loadButtonTag.current.disabled = true;
+        //     this.processVideoButtonTag.current.disabled = true;
+        //     this.playVideo.current.disabled = true;      
+        // }
+        // reader.onloadend = (e) => {  
+        //     this.waveSurferRef.current.load(this.videoRef.current);
+        //     this.loadButtonTag.current.disabled = false;
+        //     this.processVideoButtonTag.current.disabled = false;
+        //     this.playVideo.current.disabled = false; 
+        // };
+
+        reader.onerror = function(event) {
+            alert("Loading Failed");
+            console.log(event.target.error);
+        };
+        reader.readAsText(file);
+        this.setState({fileName : file.name})
+
+    }
+
     render () {
         return(
 
             <div className="container">
             <center>
-            <hr className="topLine"/>
+            <div className="process-button">
+                    <input type='file' id='file' ref={this.inputFile} onChange={this.handleFileUpload} style={{display: 'none'}}/>
+                    <button style = {{ width:'25%', minWidth:'250px'}} type="button" value='loadsignals'  onClick={this.handleClick} disabled={false}>Load Signals</button>
 
+                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='loadlandmarks'  onClick={this.handleClick} disabled={false}>Load Landmarks</button>
+            </div>
 
             <div className="plotRight">
 
@@ -1684,10 +1736,10 @@ class ShowResults extends Component {
                 <input className="interact-slider" type="range" min="0" max="10" defaultValue="0" id="slider" ref={this.sliderRef} onChange={this.handleSliderChange}  />
             </div> */}
 
-                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savesignals' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Signals</button>
-                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savepeaks' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Peaks</button> <br/>
-                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savelandmarks' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Landmakrs</button> <br/>
-                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='saveeverything' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Everything</button>
+                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savesignals'  onClick={this.handleClick} disabled={false}>Save Signals</button>
+                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savepeaks'  onClick={this.handleClick} disabled={false}>Save Peaks</button> <br/>
+                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savelandmarks'  onClick={this.handleClick} disabled={false}>Save Landmakrs</button> <br/>
+                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='saveeverything' onClick={this.handleClick} disabled={false}>Save Everything</button>
 
             </div>
 
@@ -1701,4 +1753,4 @@ class ShowResults extends Component {
     }
 }
 
-export default ShowResults;
+export default DataAnalysis;
