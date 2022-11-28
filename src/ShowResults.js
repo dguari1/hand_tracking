@@ -3,7 +3,7 @@ import React, { Component, createRef, useState, useEffect, useMemo, useCallback 
 import  "./ShowResults.css";
 import Plot from 'react-plotly.js'
 
-import {find_local_maxima, filter_by_distance} from './findpeaks.js'
+import {minimal_find_peaks} from './findpeaks.js'
 import { average, getStandardDeviation, lowPassFilter, difftoNumber} from "./utils";
 import { toHaveDescription, toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 // import filter from "plotly.js/lib/filter";
@@ -82,7 +82,7 @@ class ShowResults extends Component {
             case 'KeyQ' :
                 this.setState({isAddNewPeakHigh : false})
                 break;
-            case 'KeyA' :
+            case 'KeyW' :
                 this.setState({isAddNewPeakLow : false})
                 break;
             default: 
@@ -94,7 +94,7 @@ class ShowResults extends Component {
         // Handle key press
         // console.log('code-down', event.code)
         switch (event.code) {
-            case 'Backspace':
+            case 'KeyR':
                     if (this.state.isMarkUp){
                         //find and remove the appropiate element in the array
                         if (this.selectedPointRight.name === 'Right Hand Peaks High'){
@@ -133,7 +133,7 @@ class ShowResults extends Component {
             case 'KeyQ' :
                 this.setState({isAddNewPeakHigh : true})
                 break;
-            case 'KeyA' :
+            case 'KeyW' :
                 this.setState({isAddNewPeakLow : true})
                 break;
         //         if (this.state.isAddNewPeak) {
@@ -1388,7 +1388,9 @@ class ShowResults extends Component {
     }
 
     getPeaksIndexandValues = (data, time, distance) => {
-        let peaksIndex = filter_by_distance(find_local_maxima(data), data, distance)
+        //let peaksIndex = filter_by_distance(find_local_maxima(data), data, distance) //filter by distance
+        //peaksIndex = filter_by_height(peaksIndex, data, average(data)) //filter by height
+        let peaksIndex = minimal_find_peaks(data, distance, average(data)) // find peaks and filter by height and distance 
         let peaksValues = peaksIndex.map(i => data[i])
         let peaksTimes = peaksIndex.map(i => time[i])
         return {peaksValues, peaksTimes}
@@ -1396,7 +1398,9 @@ class ShowResults extends Component {
 
     getPeaksIndexandValuesNeg = (data, time, distance) => {
         let dataNeg = data.map(val => (-1*val))
-        let peaksIndex = filter_by_distance(find_local_maxima(dataNeg), dataNeg, distance)
+        // let peaksIndex = filter_by_distance(find_local_maxima(dataNeg), dataNeg, distance)
+        // peaksIndex = filter_by_height(peaksIndex, dataNeg, average(dataNeg))
+        let peaksIndex = minimal_find_peaks(dataNeg, distance, average(dataNeg)) // find peaks and filter by height and distance 
         let peaksValues = peaksIndex.map(i => data[i])
         let peaksTimes = peaksIndex.map(i => time[i])
         return {peaksValues, peaksTimes}
