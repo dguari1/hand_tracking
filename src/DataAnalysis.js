@@ -47,6 +47,8 @@ class DataAnalysis extends Component {
         this.selectedPointLeft = {}
 
         this.newPeak = {}
+        this.fileName = null
+
     }
 
 
@@ -1523,12 +1525,12 @@ class DataAnalysis extends Component {
                                                        time : this.leftHigh.peaksTimes} ,
                                           Valleys : {data : this.leftLow.peaksValues,
                                                        time : this.leftLow.peaksTimes}}}
+
                 fileName = this.fileName.split(".")[0]+'-peaks.json';
                 this.handleSave(item,fileName)
                 break;
             case 'loadsignals':
                 this.inputFile.current.click();
-                break;
                 break;
             default:
                 break
@@ -1593,7 +1595,8 @@ class DataAnalysis extends Component {
             console.log(event.target.error);
         };
         reader.readAsText(file);
-        this.setState({fileName : file.name})
+        this.fileName = file.name
+        //this.setState({fileName : file.name})
 
     }
 
@@ -1659,10 +1662,15 @@ class DataAnalysis extends Component {
         family: 'Verdana, Geneva, sans-serif;',
         size: 16,
         color: '#7f7f7f'
-      },showlegend: false,
-      datarevision : this.state.revision}} 
+      },
+      showlegend: false,
+      datarevision : this.state.revision,
+      uirevision : true}} 
         revision = {this.state.revision}
         onClick={(data) => this.handleClickonPlot(data)}
+        config ={{
+            scrollZoom : true,
+            }}
       />
       </div>
       <br/>
@@ -1716,9 +1724,14 @@ class DataAnalysis extends Component {
         color: '#7f7f7f'
       },
       showlegend: false,
-      datarevision : this.state.revision }} 
+      datarevision : this.state.revision, // datarevision helps to update the plot when the data is updated 
+      uirevision : true // uirevision helps to maintain the current zoom leven when the state chages
+      }} 
       revision = {this.state.revision}
       onClick={(data) => this.handleClickonPlot(data)}
+      config ={{
+            scrollZoom : true,
+            }}
       />
 
 
