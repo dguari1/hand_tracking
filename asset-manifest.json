@@ -1,15 +1,15 @@
 {
   "files": {
     "main.css": "/hand_tracking/static/css/main.c006df3b.css",
-    "main.js": "/hand_tracking/static/js/main.208931f7.js",
+    "main.js": "/hand_tracking/static/js/main.672dfe8b.js",
     "static/js/787.8806f9f8.chunk.js": "/hand_tracking/static/js/787.8806f9f8.chunk.js",
     "index.html": "/hand_tracking/index.html",
     "main.c006df3b.css.map": "/hand_tracking/static/css/main.c006df3b.css.map",
-    "main.208931f7.js.map": "/hand_tracking/static/js/main.208931f7.js.map",
+    "main.672dfe8b.js.map": "/hand_tracking/static/js/main.672dfe8b.js.map",
     "787.8806f9f8.chunk.js.map": "/hand_tracking/static/js/787.8806f9f8.chunk.js.map"
   },
   "entrypoints": [
     "static/css/main.c006df3b.css",
-    "static/js/main.208931f7.js"
+    "static/js/main.672dfe8b.js"
   ]
 }
