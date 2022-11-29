@@ -1629,17 +1629,17 @@ class DataAnalysis extends Component {
         let reader = new FileReader();
         reader.onload = (e) => {
             var data = JSON.parse(e.target.result)
-            this.rightHigh.peaksValues = data.peaksRight.highPeaks.data
-            this.rightHigh.peaksTimes = data.peaksRight.highPeaks.time
+            this.rightHigh.peaksValues = data.peaksRight.Peaks.data
+            this.rightHigh.peaksTimes = data.peaksRight.Peaks.time
 
-            this.rightLow.peaksValues = data.peaksRight.lowPeaks.data
-            this.rightLow.peaksTimes = data.peaksRight.lowPeaks.time
+            this.rightLow.peaksValues = data.peaksRight.Valleys.data
+            this.rightLow.peaksTimes = data.peaksRight.Valleys.time
 
-            this.leftHigh.peaksValues = data.peaksLeft.highPeaks.data
-            this.leftHigh.peaksTimes = data.peaksLeft.highPeaks.time
+            this.leftHigh.peaksValues = data.peaksLeft.Peaks.data
+            this.leftHigh.peaksTimes = data.peaksLeft.Peaks.time
 
-            this.leftLow.peaksValues = data.peaksLeft.lowPeaks.data
-            this.leftLow.peaksTimes = data.peaksLeft.lowPeaks.time
+            this.leftLow.peaksValues = data.peaksLeft.Valleys.data
+            this.leftLow.peaksTimes = data.peaksLeft.Valleys.time
 
             this.setState({revision : this.state.revision + 1})
 
