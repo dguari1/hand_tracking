@@ -1390,7 +1390,7 @@ class ShowResults extends Component {
     getPeaksIndexandValues = (data, time, distance) => {
         //let peaksIndex = filter_by_distance(find_local_maxima(data), data, distance) //filter by distance
         //peaksIndex = filter_by_height(peaksIndex, data, average(data)) //filter by height
-        let peaksIndex = minimal_find_peaks(data, distance, average(data)) // find peaks and filter by height and distance 
+        let peaksIndex = minimal_find_peaks(data, distance, average(data)-(1/4)*average(data)) // find peaks and filter by height and distance 
         let peaksValues = peaksIndex.map(i => data[i])
         let peaksTimes = peaksIndex.map(i => time[i])
         return {peaksValues, peaksTimes}
@@ -1518,16 +1518,31 @@ class ShowResults extends Component {
                  this.handleSave(item,fileName)
                 break;
             case 'savepeaks':
-                item =     {peaksRight : {Peaks : {data : this.rightHigh.peaksValues,
-                                                       time : this.rightHigh.peaksTimes} ,
-                                          Valleys  : {data : this.rightLow.peaksValues,
-                                                       time : this.rightLow.peaksTimes}},
-                            peaksLeft  : {Peaks : {data : this.leftHigh.peaksValues,
-                                                       time : this.leftHigh.peaksTimes} ,
-                                          Valleys : {data : this.leftLow.peaksValues,
-                                                       time : this.leftLow.peaksTimes}}}
-                fileName = this.fileName.split(".")[0]+'-peaks.json';
-                this.handleSave(item,fileName)
+                // check the number of peaks and valleys
+                const npr = this.rightHigh.peaksValues.length
+                const nvr = this.rightLow.peaksValues.length
+                const npl = this.leftHigh.peaksValues.length
+                const nvl = this.leftLow.peaksValues.length
+                //save only if the peaks and valleys in left and right are the same
+                if ((npr!==nvr) && (npl!==nvl)){
+                    window.alert('different number of peaks and valleys -- Left and Right')
+                } else if (npr!== nvr){
+                    window.alert('different number of peaks and valleys -- Right')
+                }else if (npl!== nvl){
+                    window.alert('different number of peaks and valleys -- Left')
+                } else {
+                    item =     {peaksRight : {Peaks : {data : this.rightHigh.peaksValues,
+                                                        time : this.rightHigh.peaksTimes} ,
+                                            Valleys  : {data : this.rightLow.peaksValues,
+                                                        time : this.rightLow.peaksTimes}},
+                                peaksLeft  : {Peaks : {data : this.leftHigh.peaksValues,
+                                                        time : this.leftHigh.peaksTimes} ,
+                                            Valleys : {data : this.leftLow.peaksValues,
+                                                        time : this.leftLow.peaksTimes}}}
+
+                    fileName = this.fileName.split(".")[0]+'-peaks.json';
+                    this.handleSave(item,fileName)
+                    }
                 break;
             default:
                 break
