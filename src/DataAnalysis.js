@@ -1523,10 +1523,27 @@ class DataAnalysis extends Component {
                 break;
             case 'savepeaks':
                 // check the number of peaks and valleys
-                const npr = this.rightHigh.peaksValues.length
-                const nvr = this.rightLow.peaksValues.length
-                const npl = this.leftHigh.peaksValues.length
-                const nvl = this.leftLow.peaksValues.length
+                // check the number of peaks and valleys
+                if (typeof this.rightHigh.peaksValues === 'undefined') {
+                    const npr = 0
+                } else {
+                    const npr = this.rightHigh.peaksValues.length
+                }
+                if (typeof this.rightLow.peaksValues === 'undefined') {
+                    const nvr = 0
+                } else {
+                    const nvr = this.rightLow.peaksValues.length
+                }
+                if (typeof this.leftHigh.peaksValues === 'undefined') {
+                    const npl = 0
+                } else {
+                    const npl = this.leftHigh.peaksValues.length
+                }
+                if (typeof this.leftLow.peaksValues === 'undefined') {
+                    const nvl = 0
+                } else {
+                    const nvl = this.leftLow.peaksValues.length
+                }
                 //save only if the peaks and valleys in left and right are the same
                 if ((npr!==nvr) && (npl!==nvl)){
                     window.alert('different number of peaks and valleys -- Left and Right')
