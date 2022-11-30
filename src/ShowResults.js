@@ -1519,10 +1519,10 @@ class ShowResults extends Component {
                 break;
             case 'savepeaks':
                 // check the number of peaks and valleys
-                const npr = 0
-                const nvr = 0
-                const npl = 0
-                const nvl = 0
+                var npr = 0
+                var nvr = 0
+                var npl = 0
+                var nvl = 0
                 if (typeof this.rightHigh.peaksValues ==! 'undefined') {
                     npr = this.rightHigh.peaksValues.length
                 } 
