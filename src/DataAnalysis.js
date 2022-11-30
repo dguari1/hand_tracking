@@ -1600,11 +1600,19 @@ class DataAnalysis extends Component {
             this.timeStampLeft = data.timeLeft
             this.dataRight = data.dataRight
             this.timeStampRight = data.timeRight
-
-            const tempA = this.timeStampLeft.slice(1)
-            const tempB = this.timeStampLeft.slice(0,-1)
-            var diff = tempA.map((value,index) => value - tempB[index])
-            this.frameRate = 1/average(diff)
+            
+            if (this.timeStampLeft.length > 0) {
+                const tempA = this.timeStampLeft.slice(1)
+                const tempB = this.timeStampLeft.slice(0,-1)
+                var diff = tempA.map((value,index) => value - tempB[index])
+                this.frameRate = 1/average(diff)
+            } else {
+                const tempA = this.timeStampRight.slice(1)
+                const tempB = this.timeStampRight.slice(0,-1)
+                var diff = tempA.map((value,index) => value - tempB[index])
+                this.frameRate = 1/average(diff)
+            }
+            
 
             this.handleFilterData()
             this.handleFindPeaksinData()
