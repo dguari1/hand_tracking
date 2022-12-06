@@ -18,7 +18,7 @@ import RegionsPlugin from 'wavesurfer.js/dist/plugin/wavesurfer.regions.min.js';
 // import * as poseDetection from '@tensorflow-models/pose-detection'
 import * as handPoseDetection from '@tensorflow-models/hand-pose-detection';
 import '@tensorflow/tfjs-backend-webgl';
-import { toHaveDisplayValue, toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
+//import { toHaveDisplayValue, toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 //import { toHaveStyle } from "@testing-library/jest-dom/dist/matchers";
 const WaveSurfer = require("wavesurfer.js");
 // const pixelmatch = require('pixelmatch');
@@ -75,6 +75,7 @@ class VideoLoadScreen extends Component {
         this.currentRegion = 0;
         this.processVideos = false
         this.coordsVideo = [];
+        this.displayResults = 'none';
 
         // finding the frame rate
         this.previousTime = 0; 
@@ -538,6 +539,9 @@ class VideoLoadScreen extends Component {
 
     handleProcessVideo = async () =>  {
 
+        this.canvasRefA.current.style.display = 'block'
+        this.removeButtonTag.current.style.display = 'none'
+
         this.setState({showResults:false})
         //load pose mode if needed
         if (this.checkboxRef.current.checked) {
@@ -723,7 +727,7 @@ class VideoLoadScreen extends Component {
 
                 }  else // user selected to process only the hands
                 {   
-                    const estimationConfig = {flipHorizontal: true };
+                    const estimationConfig = {flipHorizontal: true};
                     const handLandmarks = await this.handsDetector.estimateHands(imageData, estimationConfig)
                     if (handLandmarks) {
                         handLandmarks.forEach(item => {
@@ -732,12 +736,31 @@ class VideoLoadScreen extends Component {
                                 this.distanceThumbIndex[this.currentRegion].rightTimeStamp.push(video.currentTime)
                                 this.landmarks[this.currentRegion].landmarksRight.push(item)
                                 this.landmarks[this.currentRegion].timeStampRight.push(video.currentTime)
+
+                                // draw a line connecting the index finger and thumb
+                                ctxA.beginPath();
+                                ctxA.moveTo(this.canvasRefA.current.width-parseInt(item.keypoints[8].x)-1, parseInt(item.keypoints[8].y));
+                                ctxA.lineTo(this.canvasRefA.current.width-parseInt(item.keypoints[4].x)-1, parseInt(item.keypoints[4].y));
+                                ctxA.strokeStyle = "red";
+                                ctxA.lineWidth = 2;
+                                ctxA.stroke();
                             } else {
                                 this.distanceThumbIndex[this.currentRegion].leftDistance.push(this.getDistanceThumbIndex(item.keypoints3D))
                                 this.distanceThumbIndex[this.currentRegion].leftTimeStamp.push(video.currentTime)
                                 this.landmarks[this.currentRegion].landmarksLeft.push(item)
                                 this.landmarks[this.currentRegion].timeStampLeft.push(video.currentTime)
+
+                                // draw a line connecting the index finger and thumb
+                                ctxA.beginPath();
+                                ctxA.moveTo(this.canvasRefA.current.width-parseInt(item.keypoints[8].x)-1, parseInt(item.keypoints[8].y));
+                                ctxA.lineTo(this.canvasRefA.current.width-parseInt(item.keypoints[4].x)-1, parseInt(item.keypoints[4].y));
+                                ctxA.strokeStyle = "green";
+                                ctxA.lineWidth = 2;
+                                ctxA.stroke();
                             }
+
+                            // draw landmakrs 
+                            
                         })
                     } else {
                         alert('No hands detected')
@@ -782,6 +805,8 @@ class VideoLoadScreen extends Component {
 
         console.log('landmarks', this.landmarks)
         console.log('distance', this.distanceThumbIndex)
+        this.canvasRefA.current.style.display = 'none'
+        this.removeButtonTag.current.style.display = 'block'
         this.setState({showResults:true})
 
     }
@@ -889,9 +914,17 @@ class VideoLoadScreen extends Component {
                     onMouseMove = {this.handleMouseMove}
                 />
 
+               
                 
 
             <button id='buttonFigure' type="button" value='remove' ref={this.removeButtonTag} onClick={this.handleClick} >x</button>
+            <canvas
+                    ref={this.canvasRefA}
+                    onMouseDown = {this.handleMouseDown2}
+                    style={{backgroundColor : 'rgba(0, 0, 255, 0.01)',
+                            display : 'none'}}
+                />    
+
 
 
             </figure>
@@ -919,7 +952,7 @@ class VideoLoadScreen extends Component {
                                             margin: "auto", 
                                             marginTop: "10px", 
                                             marginBottom: "10px",
-                                            // transform: "translateY(-100%)",
+                                            transform: "translateY(-100%)",
                                             //top: "-50%",
                                         }}/>
                     <div id="wave-timeline" ref={this.timeLineRef} style = {{width: "75%",}}></div>
@@ -951,13 +984,7 @@ class VideoLoadScreen extends Component {
                                                       fileName = {this.state.fileName}
                 /> :null}
                 </center>
-                <canvas
-                    ref={this.canvasRefA}
-                    onMouseDown = {this.handleMouseDown2}
-                    style={{width : '50%',
-                            backgroundColor : 'rgba(0, 0, 255, 0.1)',
-                            display : 'none'}}
-                />    
+             
                 <video ref={this.secondVideoRef}/>  
                 <canvas
                     ref={this.canvasRefB}
