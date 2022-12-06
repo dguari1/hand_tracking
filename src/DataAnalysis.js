@@ -1527,18 +1527,19 @@ class DataAnalysis extends Component {
                 var nvr = 0
                 var npl = 0
                 var nvl = 0
-                if (typeof this.rightHigh.peaksValues ==! 'undefined') {
+                try {
                     npr = this.rightHigh.peaksValues.length
-                } 
-                if (typeof this.rightLow.peaksValues ==! 'undefined') {
+                } catch {  npr = 0 }
+                try {
                     nvr = this.rightLow.peaksValues.length
-                } 
-                if (typeof this.leftHigh.peaksValues ==! 'undefined') {
+                } catch { nvr = 0 }
+                try {
                     npl = this.leftHigh.peaksValues.length
-                } 
-                if (typeof this.leftLow.peaksValues ==! 'undefined') {
+                } catch { npl = 0 }
+                try {
                     nvl = this.leftLow.peaksValues.length
-                } 
+                } catch { nvl = 0 }
+                console.log(npr,nvr,npl,nvl)
                 //save only if the peaks and valleys in left and right are the same
                 if ((npr!==nvr) && (npl!==nvl)){
                     window.alert('different number of peaks and valleys -- Left and Right')

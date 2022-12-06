@@ -449,6 +449,8 @@ class VideoLoadScreen extends Component {
         // };
         reader.onloadend = (e) => {  
            this.waveSurferRef.current.load(this.videoRef.current);
+           this.waveSurferRef.current.clearRegions()
+           this.removeButtonTag.current.click()
            // this.videoRef.current.setAttribute('controls', 'true')
 
             this.loadButtonTag.current.disabled = false;
