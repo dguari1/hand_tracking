@@ -46,7 +46,7 @@ class VideoLoadScreen extends Component {
         this.canvasRefA = createRef();
         this.canvasRefB = createRef();
 
-        this.secondVideoRef = createRef()
+        //this.secondVideoRef = createRef()
 
         this.loadButtonTag = createRef();
         this.processVideoButtonTag =  createRef();
@@ -75,7 +75,7 @@ class VideoLoadScreen extends Component {
         this.currentRegion = 0;
         this.processVideos = false
         this.coordsVideo = [];
-        this.displayResults = 'none';
+        this.flipHorizontal = true; // defines if video will be flipped -- expected value: true | if false, then estimated handiness will be incorrect and must be corrected manually
 
         // finding the frame rate
         this.previousTime = 0; 
@@ -106,7 +106,7 @@ class VideoLoadScreen extends Component {
                                 ]
 
 
-        //this variable will store the landmarks                            
+        //this variable will store the landmarks for each region, there are at most two regions                           
         this.landmarks  = [{landmarksRight : [],
                            timeStampRight : [],
                            landmarksLeft : [],
@@ -166,7 +166,7 @@ class VideoLoadScreen extends Component {
         
 
           // define canvas context 
-          this.ctx = this.canvasRef.current.getContext('2d');
+          this.ctx = this.canvasRef.current.getContext('2d',{willReadFrequently:true});
           this.ctx.strokeStyle = "red";
           this.ctx.lineWidth = 2;
 
@@ -481,6 +481,7 @@ class VideoLoadScreen extends Component {
     }
 
     handleMouseDown = (event) => {
+        //get the current mouse position in the canvas if there is no rectangle 
         event.preventDefault();
         event.stopPropagation();
 
@@ -490,6 +491,7 @@ class VideoLoadScreen extends Component {
             this.startX = parseInt(pos.x)
             this.startY = parseInt(pos.y)
         }
+
     }
 
     handleMouseUp = (event) =>{
@@ -538,9 +540,6 @@ class VideoLoadScreen extends Component {
     }
 
     handleProcessVideo = async () =>  {
-
-        this.canvasRefA.current.style.display = 'block'
-        this.removeButtonTag.current.style.display = 'none'
 
         this.setState({showResults:false})
         //load pose mode if needed
@@ -666,7 +665,7 @@ class VideoLoadScreen extends Component {
             return Math.sqrt(x*x + y*y + z*z)
         }
 
-        return 0.7*distanceBetweenPoints(landmakrs[8], landmakrs[4]) + 0.2*distanceBetweenPoints(landmakrs[7], landmakrs[3])+ 0.1*distanceBetweenPoints(landmakrs[6], landmakrs[2])
+        return 0.8*distanceBetweenPoints(landmakrs[8], landmakrs[4]) + 0.15*distanceBetweenPoints(landmakrs[7], landmakrs[3])+ 0.05*distanceBetweenPoints(landmakrs[6], landmakrs[2])
 
     }
     // callback that will be activated every time a seeking event ends
@@ -727,36 +726,51 @@ class VideoLoadScreen extends Component {
 
                 }  else // user selected to process only the hands
                 {   
-                    const estimationConfig = {flipHorizontal: true};
+                    const estimationConfig = {flipHorizontal: this.flipHorizontal};
                     const handLandmarks = await this.handsDetector.estimateHands(imageData, estimationConfig)
                     if (handLandmarks) {
                         handLandmarks.forEach(item => {
+
+                            //find position of thum and index in screen
+                            var posIndex = this.correctPixelPosition(item.keypoints[8].x,item.keypoints[8].y)
+                            var posThumb = this.correctPixelPosition(item.keypoints[4].x,item.keypoints[4].y)
+
+                            //clean canvas
+                            this.ctx.clearRect(0, 0, this.canvasRef.current.width, this.canvasRef.current.height);
+                            if (this.startX !== null) {
+                                //draw rectangle
+                                this.ctx.strokeStyle = "red";
+                                this.ctx.lineWidth = 2;
+                                this.ctx.strokeRect(this.startX, this.startY, this.endWidth,this.endHeight)
+
+                            }
+  
                             if (item.handedness === 'Right') {
                                 this.distanceThumbIndex[this.currentRegion].rightDistance.push(this.getDistanceThumbIndex(item.keypoints3D))
                                 this.distanceThumbIndex[this.currentRegion].rightTimeStamp.push(video.currentTime)
                                 this.landmarks[this.currentRegion].landmarksRight.push(item)
                                 this.landmarks[this.currentRegion].timeStampRight.push(video.currentTime)
 
-                                // draw a line connecting the index finger and thumb
-                                ctxA.beginPath();
-                                ctxA.moveTo(this.canvasRefA.current.width-parseInt(item.keypoints[8].x)-1, parseInt(item.keypoints[8].y));
-                                ctxA.lineTo(this.canvasRefA.current.width-parseInt(item.keypoints[4].x)-1, parseInt(item.keypoints[4].y));
-                                ctxA.strokeStyle = "red";
-                                ctxA.lineWidth = 2;
-                                ctxA.stroke();
+                                //draw a line connecting the index finger and thumb
+                                this.ctx.beginPath();
+                                this.ctx.moveTo(posIndex.x, posIndex.y);
+                                this.ctx.lineTo(posThumb.x, posThumb.y);
+                                this.ctx.strokeStyle = "rgba(6,123,194,0.9)";
+                                this.ctx.lineWidth = 1;
+                                this.ctx.stroke();
                             } else {
                                 this.distanceThumbIndex[this.currentRegion].leftDistance.push(this.getDistanceThumbIndex(item.keypoints3D))
                                 this.distanceThumbIndex[this.currentRegion].leftTimeStamp.push(video.currentTime)
                                 this.landmarks[this.currentRegion].landmarksLeft.push(item)
                                 this.landmarks[this.currentRegion].timeStampLeft.push(video.currentTime)
-
-                                // draw a line connecting the index finger and thumb
-                                ctxA.beginPath();
-                                ctxA.moveTo(this.canvasRefA.current.width-parseInt(item.keypoints[8].x)-1, parseInt(item.keypoints[8].y));
-                                ctxA.lineTo(this.canvasRefA.current.width-parseInt(item.keypoints[4].x)-1, parseInt(item.keypoints[4].y));
-                                ctxA.strokeStyle = "green";
-                                ctxA.lineWidth = 2;
-                                ctxA.stroke();
+                                
+                                //draw a line connecting the index finger and thumb
+                                this.ctx.beginPath();
+                                this.ctx.moveTo(posIndex.x, posIndex.y);
+                                this.ctx.lineTo(posThumb.x, posThumb.y);
+                                this.ctx.strokeStyle = "rgba(243,119,72,0.9)";
+                                this.ctx.lineWidth = 1;
+                                this.ctx.stroke();
                             }
 
                             // draw landmakrs 
@@ -801,12 +815,40 @@ class VideoLoadScreen extends Component {
 
     }
 
+    correctPixelPosition = (x,y) => {
+        // provides corrected position of pixel in image
+        if (this.flipHorizontal) {
+            var newX = this.canvasRefA.current.width-x-1
+            var newY = y
+        } else {
+            var newX = x
+            var newY = y
+        }
+
+        // correct the position of the selected area
+        newX = parseInt((newX + this.coordsVideo[0])/this.videoRef.current.videoWidth* this.canvasRef.current.width)
+        newY = parseInt((newY + this.coordsVideo[2])/this.videoRef.current.videoHeight* this.canvasRef.current.height)
+
+
+        // var x1 = parseInt((this.state.rectangle.x1 / this.canvasRef.current.width) * this.videoRef.current.videoWidth);
+        // var y1 = parseInt((this.state.rectangle.y1 / this.canvasRef.current.height) * this.videoRef.current.videoHeight);
+
+        return {'x': newX, 'y': newY}
+
+    }
+
     handleFinishProcessingVideo = () => {
 
         console.log('landmarks', this.landmarks)
         console.log('distance', this.distanceThumbIndex)
-        this.canvasRefA.current.style.display = 'none'
-        this.removeButtonTag.current.style.display = 'block'
+        this.ctx.clearRect(0, 0, this.canvasRef.current.width, this.canvasRef.current.height);
+        if (this.startX !== null) {
+            //draw rectangle
+            this.ctx.strokeStyle = "red";
+            this.ctx.lineWidth = 2;
+            this.ctx.strokeRect(this.startX, this.startY, this.endWidth,this.endHeight)
+
+        }
         this.setState({showResults:true})
 
     }
@@ -860,9 +902,36 @@ class VideoLoadScreen extends Component {
         console.log(pos)
     }
 
+    handleVideoTimeUpdate = (event) => {
+        console.log(this.processVideos)
+        if (!this.processVideos) //this function will do something only if the videos are not being processed
+        {
+            var currentTime = this.videoRef.current.currentTime
+            this.landmarks.forEach(item => {
+                if (item.landmarksRight.length>0)
+                {
+
+                    var difference = item.timeStampRight.map(function(value,index) { return (value - currentTime); }); 
+                    console.log(difference)
+                    const min = Math.min(...difference);
+                    console.log(min)
+                    const index = difference.indexOf(min);
+
+                }
+            })
+            
+
+        }
+    }
+
+    updatePositioninVideo = (x,y) => {
+        // this function updates the video position once a user click on the plot while pressing V
+        this.videoRef.current.currentTime = y
+    }
+
     render () {
         return(
-
+ 
             <div className="container">
 
                 <center>
@@ -905,25 +974,30 @@ class VideoLoadScreen extends Component {
                         onPause = {this.handlePause}
                         onPlay = {this.handlePlay}
                         onSeeked = {this.handleSeeked}
+                        // onTimeUpdate= {this.handleVideoTimeUpdate}
                         // onTimeUpdate = {this.handleTimeUpdate}
                 /> 
+                
                 <canvas
                     ref={this.canvasRef}
                     onMouseDown = {this.handleMouseDown}
                     onMouseUp = {this.handleMouseUp}
                     onMouseMove = {this.handleMouseMove}
                 />
+                 {/* <canvas
+                    ref={this.canvasRefB}
+                    onMouseDown = {this.handleMouseDown2}
+                    style={{backgroundColor : "transparent",
+                            display : 'none'}}
+                />  */}
 
                
                 
 
             <button id='buttonFigure' type="button" value='remove' ref={this.removeButtonTag} onClick={this.handleClick} >x</button>
-            <canvas
-                    ref={this.canvasRefA}
-                    onMouseDown = {this.handleMouseDown2}
-                    style={{backgroundColor : 'rgba(0, 0, 255, 0.01)',
-                            display : 'none'}}
-                />    
+            
+           
+               
 
 
 
@@ -982,14 +1056,21 @@ class VideoLoadScreen extends Component {
                                                       coordsRectangleinVideo = {this.coordsVideo}
                                                       frameRate = {this.estimatedFrameRate}
                                                       fileName = {this.state.fileName}
+                                                      updatePositioninVideo = {this.updatePositioninVideo}
                 /> :null}
                 </center>
              
-                <video ref={this.secondVideoRef}/>  
-                <canvas
+                {/* <video ref={this.secondVideoRef}/>   */}
+                {/* <canvas
                     ref={this.canvasRefB}
                     style={{width : '50%',
                             backgroundColor : 'rgba(0, 0, 255, 0.1)',
+                            display : 'none'}}
+                />  */}
+                <canvas
+                    ref={this.canvasRefA}
+                    onMouseDown = {this.handleMouseDown2}
+                    style={{backgroundColor : 'rgba(0, 0, 255, 0.01)',
                             display : 'none'}}
                 /> 
             </div>

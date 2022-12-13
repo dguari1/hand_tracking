@@ -20,6 +20,7 @@ class ShowResults extends Component {
             revision : 0,
             isAddNewPeakHigh : false,
             isAddNewPeakLow : false,
+            isViewinPlot : false,
         }
 
         this.canvasRef = createRef();
@@ -85,6 +86,8 @@ class ShowResults extends Component {
             case 'KeyW' :
                 this.setState({isAddNewPeakLow : false})
                 break;
+            case 'KeyV':
+                this.setState({isViewinPlot : true})
             default: 
                 break;
         }
@@ -136,23 +139,8 @@ class ShowResults extends Component {
             case 'KeyW' :
                 this.setState({isAddNewPeakLow : true})
                 break;
-        //         if (this.state.isAddNewPeak) {
-        //             if (this.newPeak.curveName === 'Right Hand') {
-
-        //                 if ((this.rightHigh.peaksValues.length > 0) && ((this.rightLow.peaksValues.length > 0)))
-        //                 {   
-
-        //                 }
-
-
-        //                 this.rightHigh = {}
-        // this.rightLow = {}
-
-        //             }
-        //             if (this.newPeak.curveName === 'Left Hand') {
-
-        //             }
-        //         }
+            case 'KeyV':
+                this.setState({isViewinPlot : true})
             default:
                 break;
         }
@@ -1488,6 +1476,12 @@ class ShowResults extends Component {
             }
             
             this.setState({revision : this.state.revision + 1})
+        }
+
+        if (this.state.isViewinPlot) {
+
+            this.props.updatePositioninVideo(data.points[0].y,data.points[0].x)
+
         }
 
     }
