@@ -1599,7 +1599,8 @@ class ShowResults extends Component {
                 name: 'Right Hand',
                 type : 'scatter',
                 mode : 'lines',
-                marker : {color:'#1f77b4'}
+                marker : {color:'#1f77b4',
+                          width: 5}
                 },
                 {
                 y : this.rightHigh.peaksValues,
@@ -1659,7 +1660,8 @@ class ShowResults extends Component {
                 name: 'Left Hand',
                 type : 'scatter',
                 mode : 'lines',
-                marker : {color:'#1f77b4'}
+                marker : {color:'#1f77b4',
+                          width: 5}
                 },
                 {
                 y : this.leftHigh.peaksValues,
