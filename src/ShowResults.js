@@ -181,7 +181,7 @@ class ShowResults extends Component {
                 this.dataRight = element.rightDistance
                 this.timeStampRight = element.rightTimeStamp
 
-                this.landmarksRigth = this.props.landmarks[idx].landmarksRight
+                this.landmarksRight = this.props.landmarks[idx].landmarksRight
             }
 
             }
