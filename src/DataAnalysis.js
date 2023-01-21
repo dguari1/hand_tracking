@@ -1702,7 +1702,8 @@ class DataAnalysis extends Component {
                 name: 'Right Hand',
                 type : 'scatter',
                 mode : 'lines',
-                marker : {color:'#1f77b4'}
+                marker : {color:'#1f77b4',
+                          width: 5}
                 },
                 {
                 y : this.rightHigh.peaksValues,
@@ -1762,7 +1763,8 @@ class DataAnalysis extends Component {
                 name: 'Left Hand',
                 type : 'scatter',
                 mode : 'lines',
-                marker : {color:'#1f77b4'}
+                marker : {color:'#1f77b4',
+                          width: 5}
                 },
                 {
                 y : this.leftHigh.peaksValues,
@@ -1825,7 +1827,7 @@ class DataAnalysis extends Component {
 
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savesignals'  onClick={this.handleClick} disabled={false}>Save Signals</button>
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savepeaks'  onClick={this.handleClick} disabled={false}>Save Peaks</button> <br/>
-                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savelandmarks'  onClick={this.handleClick} disabled={false}>Save Landmakrs</button> <br/>
+                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savelandmarks'  onClick={this.handleClick} disabled={false}>Save Landmarks</button> <br/>
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='saveeverything' onClick={this.handleClick} disabled={false}>Save Everything</button>
 
             </div>
