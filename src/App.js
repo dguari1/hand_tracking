@@ -14,6 +14,9 @@ import DataAnalysis from './DataAnalysis';
 
 function App() {
 
+  useEffect(() => {
+    document.title = 'Hand Tracking'
+}, []);
 
 
   const [showHome, setShowHome] = useState(true);
