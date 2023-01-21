@@ -1827,7 +1827,7 @@ class DataAnalysis extends Component {
 
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savesignals'  onClick={this.handleClick} disabled={false}>Save Signals</button>
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savepeaks'  onClick={this.handleClick} disabled={false}>Save Peaks</button> <br/>
-                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savelandmarks'  onClick={this.handleClick} disabled={false}>Save Landmakrs</button> <br/>
+                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savelandmarks'  onClick={this.handleClick} disabled={false}>Save Landmarks</button> <br/>
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='saveeverything' onClick={this.handleClick} disabled={false}>Save Everything</button>
 
             </div>

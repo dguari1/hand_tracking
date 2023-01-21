@@ -1026,7 +1026,7 @@ class VideoLoadScreen extends Component {
                                             margin: "auto", 
                                             marginTop: "10px", 
                                             marginBottom: "10px",
-                                            transform: "translateY(-100%)",
+                                            //transform: "translateY(-100%)",
                                             //top: "-50%",
                                         }}/>
                     <div id="wave-timeline" ref={this.timeLineRef} style = {{width: "75%",}}></div>

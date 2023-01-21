@@ -35,6 +35,8 @@ class ShowResults extends Component {
         this.timeStampLeft = []
         this.dataRight = []
         this.timeStampRight = []
+        this.landmarksLeft = []
+        this.landmarksRight = []
 
         this.frameRate = this.props.frameRate
         this.fileName = this.props.fileName
@@ -150,7 +152,7 @@ class ShowResults extends Component {
     handleProcessInputData = () => {
 
         var tempData = this.props.distanceThumbIndex
-        tempData.forEach(element => {
+        tempData.forEach((element,idx) => {
 
             if ((element.leftDistance.length >0) && (element.rightDistance.length === 0)) {
                 this.dataLeft = element.leftDistance
@@ -173,9 +175,13 @@ class ShowResults extends Component {
             if ((stdLeft > stdRight) && (meanLeft > meanRight)){
                 this.dataLeft = element.leftDistance
                 this.timeStampLeft = element.leftTimeStamp
+
+                this.landmarksLeft = this.props.landmarks[idx].landmarksLeft
             } else {
                 this.dataRight = element.rightDistance
                 this.timeStampRight = element.rightTimeStamp
+
+                this.landmarksRigth = this.props.landmarks[idx].landmarksRight
             }
 
             }
@@ -1551,6 +1557,16 @@ class ShowResults extends Component {
                     this.handleSave(item,fileName)
                     }
                 break;
+
+            case 'savelandmarks':
+                item =     {landmarksLeft : this.landmarksLeft,
+                            timeLeft : this.timeStampLeft,
+                            landmarksRight: this.landmarksRight,
+                            timeRight : this.timeStampRight,}
+
+                fileName = this.fileName.split(".")[0]+'-landmarks.json';
+                this.handleSave(item,fileName)
+
             default:
                 break
         }
@@ -1724,7 +1740,7 @@ class ShowResults extends Component {
 
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savesignals' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Signals</button>
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savepeaks' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Peaks</button> <br/>
-                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savelandmarks' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Landmakrs</button> <br/>
+                    <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='savelandmarks' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Landmarks</button> <br/>
                     <button style = {{ width:'45%', minWidth:'250px'}}  type="button" value='saveeverything' ref={this.processVideoButtonTag} onClick={this.handleClick} disabled={false}>Save Everything</button>
 
             </div>
