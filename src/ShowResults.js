@@ -157,11 +157,13 @@ class ShowResults extends Component {
             if ((element.leftDistance.length >0) && (element.rightDistance.length === 0)) {
                 this.dataLeft = element.leftDistance
                 this.timeStampLeft = element.leftTimeStamp
+                this.landmarksLeft = this.props.landmarks[idx].landmarksLeft
             }
 
             if ((element.leftDistance.length === 0) && (element.rightDistance.length > 0)) {
                 this.dataRight = element.rightDistance
                 this.timeStampRight = element.rightTimeStamp
+                this.landmarksRight = this.props.landmarks[idx].landmarksRight
             }
 
 
